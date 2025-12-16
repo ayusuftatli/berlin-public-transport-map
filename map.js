@@ -1,6 +1,6 @@
 import { getData } from './vbb_data.js'
 
-const map = L.map('map').setView([52.52, 13.414], 15);
+const map = L.map('map').setView([52.52, 13.414], 11);
 
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
@@ -9,15 +9,19 @@ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 
 
-
-
+const north = 52.6755;
+const south = 52.3383;
+const west = 13.0884;
+const east = 13.7611;
 
 const polygon = L.polygon([
-    [52.52411, 13.41002],
-    [52.52411, 13.41709],
-    [52.51942, 13.41709],
-    [52.5192, 13.41002]
+    [north, west],
+    [north, east],
+    [south, east],
+    [south, west]
 ]).addTo(map);
+
+//Feature Group to store drawings
 
 //Layer group to hold all markers
 const markersLayer = L.layerGroup().addTo(map);

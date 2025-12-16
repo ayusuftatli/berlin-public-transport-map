@@ -1,66 +1,16 @@
-// Request counter to track API usage (Rate limit: 100 req/min, burst 200 req/min)
-let requestCounter = {
-    total: 0,
-    lastMinute: [],
-    lastReset: Date.now()
-};
 
-function updateStatsDisplay(total, lastMinute) {
-    const totalEl = document.getElementById('total-requests');
-    const minuteEl = document.getElementById('minute-requests');
+const north = 52.6755;
+const south = 52.3383;
+const west = 13.0884;
+const east = 13.7611;
 
-    if (totalEl) totalEl.textContent = `Total: ${total}`;
-    if (minuteEl) {
-        minuteEl.textContent = `Last minute: ${lastMinute}/100`;
 
-        // Color code based on usage
-        if (lastMinute > 90) {
-            minuteEl.style.color = 'red';
-            minuteEl.style.fontWeight = 'bold';
-        } else if (lastMinute > 70) {
-            minuteEl.style.color = 'orange';
-        } else {
-            minuteEl.style.color = 'green';
-        }
-    }
-}
-
-function trackRequest() {
-    const now = Date.now();
-    requestCounter.total++;
-    requestCounter.lastMinute.push(now);
-
-    // Remove requests older than 1 minute
-    requestCounter.lastMinute = requestCounter.lastMinute.filter(time => now - time < 60000);
-
-    // Reset counter every minute for display
-    if (now - requestCounter.lastReset > 60000) {
-        requestCounter.lastReset = now;
-    }
-
-    const requestsThisMinute = requestCounter.lastMinute.length;
-    console.log(`[API Counter] Total requests: ${requestCounter.total} | Last minute: ${requestsThisMinute}/100 | Burst limit: 200/min`);
-
-    // Update visual display
-    updateStatsDisplay(requestCounter.total, requestsThisMinute);
-
-    if (requestsThisMinute > 80) {
-        console.warn(`[API Counter] WARNING: Approaching rate limit (${requestsThisMinute}/100 requests in last minute)`);
-    }
-
-    if (requestsThisMinute > 100) {
-        console.error(`[API Counter] ERROR: Rate limit exceeded! (${requestsThisMinute}/100 requests in last minute)`);
-    }
-
-    return requestsThisMinute;
-}
 
 export async function getData(retryCount = 0, maxRetries = 2) {
-    const bbox = 'north=52.52411&west=13.41002&south=52.51942&east=13.41709';
-    const url = `https://v6.vbb.transport.rest/radar?${bbox}&results=10`;
+    const bbox = `north=${north}&west=${west}2&south=${south}2&east=${east}`;
+    const url = `https://v6.vbb.transport.rest/radar?${bbox}`;
 
-    // Track this request
-    const requestsThisMinute = trackRequest();
+
 
     console.log(`[getData] Starting API call (attempt ${retryCount + 1}/${maxRetries + 1}) to:`, url);
 
