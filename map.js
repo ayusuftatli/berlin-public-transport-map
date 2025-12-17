@@ -30,7 +30,7 @@ const refreshButton = document.getElementById("refresh-button");
 
 refreshButton.addEventListener("click", updateMarkers)
 
-const markers = {};
+const markers = new Map();
 
 function checkMarkers(data) {
 
@@ -48,45 +48,66 @@ function checkMarkers(data) {
 }
 
 async function updateMarkers() {
-    console.log('[updateMarkers] Function called at:', new Date().toISOString());
 
     const myData = await getData();
-    console.log('[updateMarkers] Received data from getData():', myData);
-    console.log('[updateMarkers] Data type:', typeof myData);
-    console.log('[updateMarkers] Is array:', Array.isArray(myData));
-    console.log('[updateMarkers] Data length:', myData?.length || 0);
+
 
     if (!myData || !Array.isArray(myData)) {
-        console.error('[updateMarkers] ERROR: myData is not an array!', myData);
         return;
     }
 
     if (myData.length === 0) {
-        console.warn('[updateMarkers] WARNING: myData array is empty, no markers to update');
         return;
     }
 
-    checkMarkers(myData);
+    for (const entry of markers.values()) {
+        entry.misses += 1;
+    }
 
-    console.log('[updateMarkers] Processing', myData.length, 'movements');
     myData.forEach((movement, index) => {
-        console.log(`[updateMarkers] Processing movement ${index + 1}/${myData.length}:`, movement.tripId);
 
-        if (!markers[movement.tripId]) {
-            console.log(`[updateMarkers] Creating new marker for tripId: ${movement.tripId}`);
-            markers[movement.tripId] = L.marker([movement.latitude, movement.longitude]).addTo(markersLayer).bindPopup(
+        if (!markers.has(movement.tripId)) {
+            const createdMarker = L.circleMarker([movement.latitude, movement.longitude],
+                {
+                    radius: 6,
+                    color: "blue",
+                    fillColor: "blue",
+                    fillOpacity: 0.8
+                }
+            ).addTo(markersLayer).bindPopup(
                 `Name: ${movement.name}<br>
             Direction: ${movement.direction}<br>
             tripId: ${movement.tripId}`
             );
+
+            markers.set(movement.tripId, {
+                marker: createdMarker,
+                misses: 0,
+                lastSeen: Date.now()
+            })
         } else {
-            console.log(`[updateMarkers] Updating existing marker for tripId: ${movement.tripId}`);
-            animateMarker(markers[movement.tripId], movement.latitude, movement.longitude);
+            const entry = markers.get(movement.tripId);
+            entry.misses = 0;
+            entry.lastSeen = Date.now()
+            animateMarker(entry.marker, movement.latitude, movement.longitude);
         }
     });
-
-    console.log('[updateMarkers] Finished processing. Total markers:', Object.keys(markers).length);
+    // cleanup
+    for (const [tripId, entry] of markers.entries()) {
+        if (entry.misses >= 3) {
+            entry.marker.removeFrom(markersLayer);
+            markers.delete(tripId);
+        } else if (entry.misses >= 1) {
+            entry.marker.setStyle({
+                color: "red",
+                fillColor: "red",
+                radius: 6,
+                fillOpacity: 0.8
+            })
+        }
+    }
 }
+
 
 updateMarkers();
 

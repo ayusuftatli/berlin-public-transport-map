@@ -1,0 +1,9 @@
+{
+    "name": "learning-maps",
+    "version": "1.0.0",
+    "description": "VBB transit map visualization with tripId tracking",
+    "type": "module",
+    "scripts": {
+        "track": "node tripTracker.js"
+    }
+}
