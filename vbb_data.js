@@ -18,7 +18,6 @@ export async function getData(bbox, retryCount = 0, maxRetries = 2) {
         console.log(`[RateLimit] ${stats.count}/${stats.limit} requests in last minute (${stats.percentage}%)`);
 
         const response = await fetch(url);
-        console.log('[getData] Response status:', response.status);
 
 
         if (!response.ok) {
@@ -75,9 +74,7 @@ export async function getData(bbox, retryCount = 0, maxRetries = 2) {
             type: movement.line.product
         }));
 
-        console.log('[getData] Transformed data count:', data.length);
-        console.log('[getData] First item sample:', data[0]);
-        console.log('[getData] Returning data array of length:', data.length);
+
 
         return data;
 

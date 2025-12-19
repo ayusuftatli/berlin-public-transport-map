@@ -122,6 +122,7 @@ async function updateMarkers() {
         }
     }
     filterMarkers()
+    markerCountDiv.innerHTML = `<p>Marker count is ${markers.size}`
 }
 
 
@@ -173,5 +174,9 @@ function filterMarkers() {
     })
 
 }
+
+const markerCountDiv = document.getElementById("marker-count")
+
+
 
 
