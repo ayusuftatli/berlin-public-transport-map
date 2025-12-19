@@ -21,7 +21,19 @@ const polygon = L.polygon([
     [south, west]
 ]).addTo(map);
 
-//Feature Group to store drawings
+// Midpoints
+const midLat = (north + south) / 2;
+const midLng = (west + east) / 2;
+
+const boxes = [
+    `north=${north}&west=${west}&south=${midLat}&east=${midLng}`,           // NW
+    `north=${north}&west=${midLng}&south=${midLat}&east=${east}`,           // NE
+    `north=${midLat}&west=${west}&south=${south}&east=${midLng}`,           // SW
+    `north=${midLat}&west=${midLng}&south=${south}&east=${east}`            // SE
+];
+
+
+
 
 //Layer group to hold all markers
 const markersLayer = L.layerGroup().addTo(map);
@@ -32,31 +44,20 @@ refreshButton.addEventListener("click", updateMarkers)
 
 const markers = new Map();
 
-function checkMarkers(data) {
-
-    const tripIds = data.map(item => item.tripId)
-
-    const markerKeys = Object.keys(markers);
-    markerKeys.forEach(markerKey => {
-        if (!tripIds.some(tripId => tripId === markerKey)) {
-            markers[markerKey].removeFrom(markersLayer)
-            delete markers[markerKey]
-
-        }
-    })
-
-}
 
 async function updateMarkers() {
 
-    const myData = await getData();
+    const results = await Promise.all(
+        boxes.map(bbox => getData(bbox))
+    );
 
+    const allData = results.flat()
 
-    if (!myData || !Array.isArray(myData)) {
+    if (!allData || !Array.isArray(allData)) {
         return;
     }
 
-    if (myData.length === 0) {
+    if (allData.length === 0) {
         return;
     }
 
@@ -64,7 +65,7 @@ async function updateMarkers() {
         entry.misses += 1;
     }
 
-    myData.forEach((movement, index) => {
+    allData.forEach((movement, index) => {
 
         if (!markers.has(movement.tripId)) {
             const createdMarker = L.circleMarker([movement.latitude, movement.longitude],

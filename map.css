@@ -41,7 +41,7 @@ body {
     background-color: #f0f0f0;
 }
 
-#api-stats {
+#rate-limit-card {
     background-color: white;
     padding: 8px 12px;
     border: 2px solid #333;
@@ -50,8 +50,32 @@ body {
     font-size: 12px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     white-space: nowrap;
+    transition: background-color 0.3s, border-color 0.3s;
 }
 
-#api-stats span {
+#rate-limit-card .label {
+    color: #666;
+}
+
+#rate-limit-card #rate-count {
     font-weight: bold;
+    color: #2e7d32;
+}
+
+#rate-limit-card.warning {
+    background-color: #fff3e0;
+    border-color: #ff9800;
+}
+
+#rate-limit-card.warning #rate-count {
+    color: #e65100;
+}
+
+#rate-limit-card.critical {
+    background-color: #ffebee;
+    border-color: #f44336;
+}
+
+#rate-limit-card.critical #rate-count {
+    color: #c62828;
 }

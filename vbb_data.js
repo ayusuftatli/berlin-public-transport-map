@@ -1,13 +1,10 @@
 
-const north = 52.6755;
-const south = 52.3383;
-const west = 13.0884;
-const east = 13.7611;
 
 
+import { recordRequest, updateUI } from './rateLimitTracker.js';
 
-export async function getData(retryCount = 0, maxRetries = 2) {
-    const bbox = `north=${north}&west=${west}2&south=${south}2&east=${east}`;
+export async function getData(bbox, retryCount = 0, maxRetries = 2) {
+
     const url = `https://v6.vbb.transport.rest/radar?${bbox}`;
 
 
@@ -15,6 +12,11 @@ export async function getData(retryCount = 0, maxRetries = 2) {
     console.log(`[getData] Starting API call (attempt ${retryCount + 1}/${maxRetries + 1}) to:`, url);
 
     try {
+        // Record this request for rate limiting
+        const stats = recordRequest();
+        updateUI();
+        console.log(`[RateLimit] ${stats.count}/${stats.limit} requests in last minute (${stats.percentage}%)`);
+
         const response = await fetch(url);
         console.log('[getData] Response status:', response.status);
         console.log('[getData] Response ok:', response.ok);
