@@ -77,7 +77,7 @@ async function updateMarkers() {
         entry.misses += 1;
     }
 
-    allData.forEach((movement, index) => {
+    allData.forEach((movement) => {
 
         if (!markers.has(movement.tripId)) {
             const createdMarker = L.circleMarker([movement.latitude, movement.longitude],
@@ -97,7 +97,8 @@ async function updateMarkers() {
             markers.set(movement.tripId, {
                 marker: createdMarker,
                 misses: 0,
-                lastSeen: Date.now()
+                lastSeen: Date.now(),
+                type: movement.type
             })
         } else {
             const entry = markers.get(movement.tripId);
@@ -120,6 +121,7 @@ async function updateMarkers() {
             })
         }
     }
+    filterMarkers()
 }
 
 
@@ -151,5 +153,25 @@ function animateMarker(marker, newLat, newLng) {
     animate();
 }
 
+const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+
+checkboxes.forEach(checkbox => {
+    checkbox.addEventListener("change", filterMarkers);
+});
+
+function filterMarkers() {
+    const checked = Array.from(checkboxes)
+        .filter(checkbox => checkbox.checked)
+        .map(checkbox => checkbox.value)
+
+    markers.forEach(entry => {
+        if (!checked.includes(entry.type)) {
+            entry.marker.removeFrom(markersLayer);
+        } else {
+            entry.marker.addTo(markersLayer);
+        }
+    })
+
+}
 
 
