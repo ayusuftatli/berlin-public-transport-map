@@ -19,7 +19,7 @@ export async function getData(bbox, retryCount = 0, maxRetries = 2) {
 
         const response = await fetch(url);
         console.log('[getData] Response status:', response.status);
-        console.log('[getData] Response ok:', response.ok);
+
 
         if (!response.ok) {
             const errorData = await response.text();
@@ -28,10 +28,6 @@ export async function getData(bbox, retryCount = 0, maxRetries = 2) {
         }
 
         const result = await response.json();
-        console.log('[getData] Raw API result:', result);
-        console.log('[getData] Result type:', typeof result);
-        console.log('[getData] Is result an array?:', Array.isArray(result));
-        console.log('[getData] Movements array exists:', !!result.movements);
         console.log('[getData] Movements count:', result.movements?.length || 0);
 
         // Handle case where API returns empty array instead of object
@@ -75,7 +71,8 @@ export async function getData(bbox, retryCount = 0, maxRetries = 2) {
             direction: movement.direction,
             tripId: movement.tripId,
             latitude: movement.location.latitude,
-            longitude: movement.location.longitude
+            longitude: movement.location.longitude,
+            type: movement.line.product
         }));
 
         console.log('[getData] Transformed data count:', data.length);

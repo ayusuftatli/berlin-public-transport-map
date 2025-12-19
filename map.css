@@ -79,3 +79,11 @@ body {
 #rate-limit-card.critical #rate-count {
     color: #c62828;
 }
+
+#filter {
+    padding: 8px 12px;
+    background-color: white;
+    border: 2px solid #333;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}

@@ -21,16 +21,28 @@ const polygon = L.polygon([
     [south, west]
 ]).addTo(map);
 
-// Midpoints
-const midLat = (north + south) / 2;
-const midLng = (west + east) / 2;
+// Calculate the Size of Each box 
+const latStep = (north - south) / 4;
+const lngStep = (east - west) / 4;
 
-const boxes = [
-    `north=${north}&west=${west}&south=${midLat}&east=${midLng}`,           // NW
-    `north=${north}&west=${midLng}&south=${midLat}&east=${east}`,           // NE
-    `north=${midLat}&west=${west}&south=${south}&east=${midLng}`,           // SW
-    `north=${midLat}&west=${midLng}&south=${south}&east=${east}`            // SE
-];
+// create the boxes
+
+const boxes = [];
+
+
+for (let row = 0; row < 4; row++) {
+    for (let col = 0; col < 4; col++) {
+        const boxNorth = north - (row * latStep);
+        const boxSouth = north - ((row + 1) * latStep);
+        const boxWest = west + (col * lngStep);
+        const boxEast = west + ((col + 1) * lngStep);
+
+        boxes.push(
+            `north=${boxNorth}&west=${boxWest}&south=${boxSouth}&east=${boxEast}`
+        );
+    }
+}
+
 
 
 
@@ -78,7 +90,8 @@ async function updateMarkers() {
             ).addTo(markersLayer).bindPopup(
                 `Name: ${movement.name}<br>
             Direction: ${movement.direction}<br>
-            tripId: ${movement.tripId}`
+            tripId: ${movement.tripId}<br>
+            type: ${movement.type}`
             );
 
             markers.set(movement.tripId, {
