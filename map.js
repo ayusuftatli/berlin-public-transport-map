@@ -1,6 +1,10 @@
 import { getData } from './vbb_data.js'
 
 const map = L.map('map').setView([52.52, 13.414], 11);
+map.createPane("polygonsPane");
+map.getPane("polygonsPane").style.zIndex = 400;
+map.createPane("markersPane");
+map.getPane("markersPane").style.zIndex = 650;
 
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
@@ -16,12 +20,14 @@ const east = 13.7611;
 
 const GRID_SIZE = 4;
 
+const polygonGroup = L.featureGroup().addTo(map);
+
 L.polygon([
     [north, west],
     [north, east],
     [south, east],
     [south, west]
-]).addTo(map);
+], { pane: "polygonsPane" }).addTo(polygonGroup);
 
 // Calculate the Size of Each box
 const latStep = (north - south) / GRID_SIZE;
@@ -37,8 +43,8 @@ function drawLabeledPolygon(bounds, label) {
         [bounds.north, bounds.east],
         [bounds.south, bounds.east],
         [bounds.south, bounds.west]
-    ])
-        .addTo(map)
+    ], { pane: "polygonsPane" })
+        .addTo(polygonGroup)
         .bindTooltip(label, {
             permanent: true,
             direction: 'center',
@@ -127,14 +133,16 @@ const MARKER_STYLE_DEFAULT = {
     radius: 6,
     color: 'blue',
     fillColor: 'blue',
-    fillOpacity: 0.8
+    fillOpacity: 0.8,
+    pane: "markersPane"
 };
 
 const MARKER_STYLE_MISSED = {
     radius: 6,
     color: 'red',
     fillColor: 'red',
-    fillOpacity: 0.8
+    fillOpacity: 0.8,
+    pane: "markersPane"
 };
 
 // update marker function
@@ -241,4 +249,20 @@ function filterMarkers() {
 
 }
 
-const markerCountDiv = document.getElementById("marker-count")
+const markerCountDiv = document.getElementById("marker-count");
+
+
+
+const polygonButton = document.getElementById("polygon-button");
+const polygonButtonSpan = document.getElementById("polygon-button-span");
+
+polygonButton.addEventListener("click", () => {
+    if (map.hasLayer(polygonGroup)) {
+        map.removeLayer(polygonGroup);
+        polygonButtonSpan.textContent = "Off"
+    } else {
+        polygonGroup.addTo(map);
+        polygonButtonSpan.textContent = "On";
+    }
+
+})
