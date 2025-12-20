@@ -14,55 +14,56 @@ const south = 52.3383;
 const west = 13.0884;
 const east = 13.7611;
 
-const polygon = L.polygon([
+const GRID_SIZE = 4;
+
+L.polygon([
     [north, west],
     [north, east],
     [south, east],
     [south, west]
 ]).addTo(map);
 
-// Calculate the Size of Each box 
-const latStep = (north - south) / 4;
-const lngStep = (east - west) / 4;
+// Calculate the Size of Each box
+const latStep = (north - south) / GRID_SIZE;
+const lngStep = (east - west) / GRID_SIZE;
 
-// create the boxes
+function buildBBox({ north, west, south, east }) {
+    return `north=${north}&west=${west}&south=${south}&east=${east}`;
+}
 
-const boxes = [];
-const coordinates = [];
-
-
-
-for (let row = 0; row < 4; row++) {
-    for (let col = 0; col < 4; col++) {
-        const boxNorth = north - (row * latStep);
-        const boxSouth = north - ((row + 1) * latStep);
-        const boxWest = west + (col * lngStep);
-        const boxEast = west + ((col + 1) * lngStep);
-
-        coordinates.push({
-            north: boxNorth,
-            south: boxSouth,
-            west: boxWest,
-            east: boxEast
-        })
-
-        const id = row * 4 + col + 1;
-        const bbox = `north=${boxNorth}&west=${boxWest}&south=${boxSouth}&east=${boxEast}`;
-
-        boxes.push(bbox);
-
-        L.polygon([
-            [boxNorth, boxWest],
-            [boxNorth, boxEast],
-            [boxSouth, boxEast],
-            [boxSouth, boxWest]
-        ]).addTo(map).bindTooltip(`Polygon ${id}`, {
+function drawLabeledPolygon(bounds, label) {
+    return L.polygon([
+        [bounds.north, bounds.west],
+        [bounds.north, bounds.east],
+        [bounds.south, bounds.east],
+        [bounds.south, bounds.west]
+    ])
+        .addTo(map)
+        .bindTooltip(label, {
             permanent: true,
             direction: 'center',
             className: 'polygon-label'
-        }).openTooltip();;
+        })
+        .openTooltip();
+}
 
+// Array items: { bbox: string, polygonId: string }
+const boxes = [];
+const coordinates = [];
 
+for (let row = 0; row < GRID_SIZE; row++) {
+    for (let col = 0; col < GRID_SIZE; col++) {
+        const bounds = {
+            north: north - (row * latStep),
+            south: north - ((row + 1) * latStep),
+            west: west + (col * lngStep),
+            east: west + ((col + 1) * lngStep)
+        };
+
+        const id = row * GRID_SIZE + col + 1;
+        coordinates.push(bounds);
+        boxes.push({ bbox: buildBBox(bounds), polygonId: String(id) });
+        drawLabeledPolygon(bounds, `Polygon ${id}`);
     }
 }
 
@@ -71,45 +72,44 @@ for (let row = 0; row < 4; row++) {
 function busyPolyDivider(index) {
     const coorObj = coordinates[index]
 
-    boxes.splice(index, 1)
+    const originalPolygonId = String(index + 1);
+    const originalIdx = boxes.findIndex((b) => b.polygonId === originalPolygonId);
+    if (originalIdx !== -1) {
+        boxes.splice(originalIdx, 1);
+    }
+
 
     const latStepDivider = (coorObj.north - coorObj.south) / 2;
     const lngStepDivider = (coorObj.east - coorObj.west) / 2;
 
-
     for (let row = 0; row < 2; row++) {
         for (let col = 0; col < 2; col++) {
-            const boxNorth = coorObj.north - (row * latStepDivider);
-            const boxSouth = coorObj.north - ((row + 1) * latStepDivider);
-            const boxWest = coorObj.west + (col * lngStepDivider);
-            const boxEast = coorObj.west + ((col + 1) * lngStepDivider);
+            const bounds = {
+                north: coorObj.north - (row * latStepDivider),
+                south: coorObj.north - ((row + 1) * latStepDivider),
+                west: coorObj.west + (col * lngStepDivider),
+                east: coorObj.west + ((col + 1) * lngStepDivider)
+            };
 
             const id = row * 2 + col + 1;
 
-            const bbox = `north=${boxNorth}&west=${boxWest}&south=${boxSouth}&east=${boxEast}`;
-            boxes.push(bbox);
-
-            L.polygon([
-                [boxNorth, boxWest],
-                [boxNorth, boxEast],
-                [boxSouth, boxEast],
-                [boxSouth, boxWest]
-            ]).addTo(map).bindTooltip(`Polygon ${index + 1}-${id}`, {
-                permanent: true,
-                direction: 'center',
-                className: 'polygon-label'
-            }).openTooltip();;
+            boxes.push({
+                bbox: buildBBox(bounds),
+                polygonId: `${index + 1}-${id}`
+            });
+            drawLabeledPolygon(bounds, `Polygon ${index + 1}-${id}`);
         }
     }
-
-
-
-
     return boxes;
 }
 
 busyPolyDivider(5)
-
+busyPolyDivider(9)
+// Remove Polygon 4 by id (indexes shift after splits)
+{
+    const idx = boxes.findIndex((b) => b.polygonId === '4');
+    if (idx !== -1) boxes.splice(idx, 1);
+}
 
 
 
@@ -123,20 +123,30 @@ refreshButton.addEventListener("click", updateMarkers)
 
 const markers = new Map();
 
+const MARKER_STYLE_DEFAULT = {
+    radius: 6,
+    color: 'blue',
+    fillColor: 'blue',
+    fillOpacity: 0.8
+};
+
+const MARKER_STYLE_MISSED = {
+    radius: 6,
+    color: 'red',
+    fillColor: 'red',
+    fillOpacity: 0.8
+};
+
 // update marker function
 async function updateMarkers() {
 
     const results = await Promise.all(
-        boxes.map((bbox, idx) => getData(bbox, idx + 1))
+        boxes.map(({ bbox, polygonId }) => getData(bbox, polygonId))
     );
 
-    const allData = results.flat()
+    const allData = results.flat();
 
-    if (!allData || !Array.isArray(allData)) {
-        return;
-    }
-
-    if (allData.length === 0) {
+    if (!Array.isArray(allData) || allData.length === 0) {
         return;
     }
 
@@ -147,13 +157,9 @@ async function updateMarkers() {
     allData.forEach((movement) => {
 
         if (!markers.has(movement.tripId)) {
-            const createdMarker = L.circleMarker([movement.latitude, movement.longitude],
-                {
-                    radius: 6,
-                    color: "blue",
-                    fillColor: "blue",
-                    fillOpacity: 0.8
-                }
+            const createdMarker = L.circleMarker(
+                [movement.latitude, movement.longitude],
+                MARKER_STYLE_DEFAULT
             ).addTo(markersLayer).bindPopup(
                 `Name: ${movement.name}<br>
             Direction: ${movement.direction}<br>
@@ -180,12 +186,7 @@ async function updateMarkers() {
             entry.marker.removeFrom(markersLayer);
             markers.delete(tripId);
         } else if (entry.misses >= 1) {
-            entry.marker.setStyle({
-                color: "red",
-                fillColor: "red",
-                radius: 6,
-                fillOpacity: 0.8
-            })
+            entry.marker.setStyle(MARKER_STYLE_MISSED)
         }
     }
     filterMarkers()
@@ -202,8 +203,6 @@ function animateMarker(marker, newLat, newLng) {
     const end = { lat: newLat, lng: newLng };
     const duration = 20000;
     const startTime = performance.now();
-
-
 
     function animate() {
         const now = performance.now()
@@ -228,12 +227,12 @@ checkboxes.forEach(checkbox => {
 });
 
 function filterMarkers() {
-    const checked = Array.from(checkboxes)
+    const checked = new Set(Array.from(checkboxes)
         .filter(checkbox => checkbox.checked)
-        .map(checkbox => checkbox.value)
+        .map(checkbox => checkbox.value));
 
     markers.forEach(entry => {
-        if (!checked.includes(entry.type)) {
+        if (!checked.has(entry.type)) {
             entry.marker.removeFrom(markersLayer);
         } else {
             entry.marker.addTo(markersLayer);
@@ -243,5 +242,3 @@ function filterMarkers() {
 }
 
 const markerCountDiv = document.getElementById("marker-count")
-
-

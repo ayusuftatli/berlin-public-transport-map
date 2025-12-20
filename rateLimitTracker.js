@@ -10,13 +10,16 @@ const WINDOW_MS = 60 * 1000; // 1 minute in milliseconds
 // Store timestamps of each request
 let requestTimestamps = [];
 
+function nowMs() {
+    return Date.now();
+}
+
 /**
  * Record a new API request
  * @returns {object} Current stats after recording
  */
 export function recordRequest() {
-    const now = Date.now();
-    requestTimestamps.push(now);
+    requestTimestamps.push(nowMs());
 
     // Clean up old timestamps outside the window
     cleanupOldRequests();
@@ -28,8 +31,7 @@ export function recordRequest() {
  * Remove requests older than 1 minute
  */
 function cleanupOldRequests() {
-    const now = Date.now();
-    const cutoff = now - WINDOW_MS;
+    const cutoff = nowMs() - WINDOW_MS;
     requestTimestamps = requestTimestamps.filter(ts => ts > cutoff);
 }
 
