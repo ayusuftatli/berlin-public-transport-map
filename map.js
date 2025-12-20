@@ -129,21 +129,28 @@ refreshButton.addEventListener("click", updateMarkers)
 
 const markers = new Map();
 
-const MARKER_STYLE_DEFAULT = {
-    radius: 6,
-    color: 'blue',
-    fillColor: 'blue',
-    fillOpacity: 0.8,
-    pane: "markersPane"
+
+
+// Color scheme for different transport types
+const TYPE_COLORS = {
+    'subway': '#0066CC',      // blue
+    'tram': '#E63946',        // red
+    'suburban': '#2A9D8F',    // green
+    'bus': '#9B59B6',         // purple
+    'regional': '#E76F51',    // orange-red
+    'express': '#D62828'      // darker red
 };
 
-const MARKER_STYLE_MISSED = {
-    radius: 6,
-    color: 'red',
-    fillColor: 'red',
-    fillOpacity: 0.8,
-    pane: "markersPane"
-};
+function getMarkerStyle(type, isMissed = false) {
+    const color = isMissed ? '#999999' : (TYPE_COLORS[type] || '#0066CC');
+    return {
+        radius: 6,
+        color: color,
+        fillColor: color,
+        fillOpacity: 0.8,
+        pane: "markersPane"
+    };
+}
 
 // update marker function
 async function updateMarkers() {
@@ -167,7 +174,7 @@ async function updateMarkers() {
         if (!markers.has(movement.tripId)) {
             const createdMarker = L.circleMarker(
                 [movement.latitude, movement.longitude],
-                MARKER_STYLE_DEFAULT
+                getMarkerStyle(movement.type)
             ).addTo(markersLayer).bindPopup(
                 `Name: ${movement.name}<br>
             Direction: ${movement.direction}<br>
@@ -186,15 +193,16 @@ async function updateMarkers() {
             entry.misses = 0;
             entry.lastSeen = Date.now()
             animateMarker(entry.marker, movement.latitude, movement.longitude);
+            entry.marker.setStyle(getMarkerStyle(entry.type));
         }
     });
     // cleanup
     for (const [tripId, entry] of markers.entries()) {
-        if (entry.misses >= 6) {
+        if (entry.misses >= 3) {
             entry.marker.removeFrom(markersLayer);
             markers.delete(tripId);
         } else if (entry.misses >= 1) {
-            entry.marker.setStyle(MARKER_STYLE_MISSED)
+            entry.marker.setStyle(getMarkerStyle(movement.type, true))
         }
     }
     filterMarkers()
@@ -249,6 +257,8 @@ function filterMarkers() {
 
 }
 
+
+// buttons and stuff
 const markerCountDiv = document.getElementById("marker-count");
 
 
@@ -266,3 +276,19 @@ polygonButton.addEventListener("click", () => {
     }
 
 })
+
+// load public transport lines
+
+async function loadGeoJSON(url, color) {
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        L.geoJSON(data, { style: { "color": color } }).addTo(map);
+    } catch (error) {
+        console.error('Error loading GeoJSON:', error);
+    }
+}
+
+loadGeoJSON(`ubahn_line.geojson`, "blue")
+loadGeoJSON(`s-bahn_lines.geojson`, "green")
+loadGeoJSON(`tram_line.geojson`, "red")
