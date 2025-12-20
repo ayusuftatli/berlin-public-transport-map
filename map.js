@@ -202,7 +202,7 @@ async function updateMarkers() {
             entry.marker.removeFrom(markersLayer);
             markers.delete(tripId);
         } else if (entry.misses >= 1) {
-            entry.marker.setStyle(getMarkerStyle(movement.type, true))
+            entry.marker.setStyle(getMarkerStyle(entry.type, true))
         }
     }
     filterMarkers()
