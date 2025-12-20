@@ -98,3 +98,12 @@ body {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     white-space: nowrap;
 }
+
+.polygon-label {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    font-weight: bold;
+    color: #333;
+    text-align: center;
+}

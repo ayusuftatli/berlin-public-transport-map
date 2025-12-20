@@ -28,6 +28,8 @@ const lngStep = (east - west) / 4;
 // create the boxes
 
 const boxes = [];
+const coordinates = [];
+
 
 
 for (let row = 0; row < 4; row++) {
@@ -37,11 +39,76 @@ for (let row = 0; row < 4; row++) {
         const boxWest = west + (col * lngStep);
         const boxEast = west + ((col + 1) * lngStep);
 
-        boxes.push(
-            `north=${boxNorth}&west=${boxWest}&south=${boxSouth}&east=${boxEast}`
-        );
+        coordinates.push({
+            north: boxNorth,
+            south: boxSouth,
+            west: boxWest,
+            east: boxEast
+        })
+
+        const id = row * 4 + col + 1;
+        const bbox = `north=${boxNorth}&west=${boxWest}&south=${boxSouth}&east=${boxEast}`;
+
+        boxes.push(bbox);
+
+        L.polygon([
+            [boxNorth, boxWest],
+            [boxNorth, boxEast],
+            [boxSouth, boxEast],
+            [boxSouth, boxWest]
+        ]).addTo(map).bindTooltip(`Polygon ${id}`, {
+            permanent: true,
+            direction: 'center',
+            className: 'polygon-label'
+        }).openTooltip();;
+
+
     }
 }
+
+// dividing the busy polygons into four
+
+function busyPolyDivider(index) {
+    const coorObj = coordinates[index]
+
+    boxes.splice(index, 1)
+
+    const latStepDivider = (coorObj.north - coorObj.south) / 2;
+    const lngStepDivider = (coorObj.east - coorObj.west) / 2;
+
+
+    for (let row = 0; row < 2; row++) {
+        for (let col = 0; col < 2; col++) {
+            const boxNorth = coorObj.north - (row * latStepDivider);
+            const boxSouth = coorObj.north - ((row + 1) * latStepDivider);
+            const boxWest = coorObj.west + (col * lngStepDivider);
+            const boxEast = coorObj.west + ((col + 1) * lngStepDivider);
+
+            const id = row * 2 + col + 1;
+
+            const bbox = `north=${boxNorth}&west=${boxWest}&south=${boxSouth}&east=${boxEast}`;
+            boxes.push(bbox);
+
+            L.polygon([
+                [boxNorth, boxWest],
+                [boxNorth, boxEast],
+                [boxSouth, boxEast],
+                [boxSouth, boxWest]
+            ]).addTo(map).bindTooltip(`Polygon ${index + 1}-${id}`, {
+                permanent: true,
+                direction: 'center',
+                className: 'polygon-label'
+            }).openTooltip();;
+        }
+    }
+
+
+
+
+    return boxes;
+}
+
+busyPolyDivider(5)
 
 
 
@@ -56,11 +123,11 @@ refreshButton.addEventListener("click", updateMarkers)
 
 const markers = new Map();
 
-
+// update marker function
 async function updateMarkers() {
 
     const results = await Promise.all(
-        boxes.map(bbox => getData(bbox))
+        boxes.map((bbox, idx) => getData(bbox, idx + 1))
     );
 
     const allData = results.flat()
@@ -109,7 +176,7 @@ async function updateMarkers() {
     });
     // cleanup
     for (const [tripId, entry] of markers.entries()) {
-        if (entry.misses >= 3) {
+        if (entry.misses >= 6) {
             entry.marker.removeFrom(markersLayer);
             markers.delete(tripId);
         } else if (entry.misses >= 1) {
@@ -176,7 +243,5 @@ function filterMarkers() {
 }
 
 const markerCountDiv = document.getElementById("marker-count")
-
-
 
 

@@ -3,65 +3,68 @@
 
 import { recordRequest, updateUI } from './rateLimitTracker.js';
 
-export async function getData(bbox, retryCount = 0, maxRetries = 2) {
+export async function getData(bbox, polygonId = '?', retryCount = 0, maxRetries = 2) {
 
     const url = `https://v6.vbb.transport.rest/radar?${bbox}`;
 
 
 
-    console.log(`[getData] Starting API call (attempt ${retryCount + 1}/${maxRetries + 1}) to:`, url);
+    const polyTag = `[Polygon ${polygonId}] `;
+    console.log(`${polyTag}[getData] Starting API call (attempt ${retryCount + 1}/${maxRetries + 1}) to:`, url);
 
     try {
         // Record this request for rate limiting
         const stats = recordRequest();
         updateUI();
-        console.log(`[RateLimit] ${stats.count}/${stats.limit} requests in last minute (${stats.percentage}%)`);
+        console.log(`${polyTag}[RateLimit] ${stats.count}/${stats.limit} requests in last minute (${stats.percentage}%)`);
 
         const response = await fetch(url);
 
 
         if (!response.ok) {
             const errorData = await response.text();
-            console.error(`[getData] API Error (${response.status}):`, errorData);
+            console.error(`${polyTag}[getData] API Error (${response.status}):`, errorData);
             throw new Error(`Response status ${response.status}: ${errorData}`);
         }
 
         const result = await response.json();
-        console.log('[getData] Movements count:', result.movements?.length || 0);
+        console.log(`${polyTag}[getData] Movements count:`, result.movements?.length || 0);
 
         // Handle case where API returns empty array instead of object
         if (Array.isArray(result) && result.length === 0) {
-            console.warn('[getData] WARNING: API returned empty array instead of object. This is an API issue.');
+            console.warn(`${polyTag}[getData] WARNING: API returned empty array instead of object. This is an API issue.`);
 
             // Retry with exponential backoff
             if (retryCount < maxRetries) {
                 const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s...
-                console.warn(`[getData] Retrying in ${delay}ms...`);
+                console.warn(`${polyTag}[getData] Retrying in ${delay}ms...`);
                 await new Promise(resolve => setTimeout(resolve, delay));
-                return getData(retryCount + 1, maxRetries);
+                // FIX: preserve bbox argument when retrying
+                return getData(bbox, polygonId, retryCount + 1, maxRetries);
             }
 
-            console.warn('[getData] Max retries reached. Returning empty array.');
+            console.warn(`${polyTag}[getData] Max retries reached. Returning empty array.`);
             return [];
         }
 
         if (!result.movements) {
-            console.error('[getData] ERROR: No movements property in response!');
-            console.error('[getData] Response structure:', Object.keys(result));
+            console.error(`${polyTag}[getData] ERROR: No movements property in response!`);
+            console.error(`${polyTag}[getData] Response structure:`, Object.keys(result));
 
             // Retry for unexpected response structure
             if (retryCount < maxRetries) {
                 const delay = Math.pow(2, retryCount) * 1000;
-                console.warn(`[getData] Retrying in ${delay}ms...`);
+                console.warn(`${polyTag}[getData] Retrying in ${delay}ms...`);
                 await new Promise(resolve => setTimeout(resolve, delay));
-                return getData(retryCount + 1, maxRetries);
+                // FIX: preserve bbox argument when retrying
+                return getData(bbox, polygonId, retryCount + 1, maxRetries);
             }
 
             return [];
         }
 
         if (result.movements.length === 0) {
-            console.warn('[getData] WARNING: Movements array is empty');
+            console.warn(`${polyTag}[getData] WARNING: Movements array is empty`);
             return [];
         }
 
@@ -79,10 +82,9 @@ export async function getData(bbox, retryCount = 0, maxRetries = 2) {
         return data;
 
     } catch (error) {
-        console.error('[getData] CATCH block - error:', error.message);
-        console.error('[getData] Full error:', error);
+        console.error(`${polyTag}[getData] CATCH block - error:`, error.message);
+        console.error(`${polyTag}[getData] Full error:`, error);
         return [];
     }
 
 }
-
