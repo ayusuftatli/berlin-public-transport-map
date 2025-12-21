@@ -3,7 +3,12 @@ export default {
     PORT: process.env.PORT || 3000,
 
     // CORS
-    ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:5500'],
+    ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS?.split(',') || [
+        'http://localhost:5500',
+        'http://localhost:5000',
+        'http://127.0.0.1:5000',
+        'http://127.0.0.1:5500'
+    ],
 
     // VBB API
     VBB_BASE_URL: 'https://v6.vbb.transport.rest',

@@ -76,13 +76,6 @@ for (let row = 0; row < GRID_SIZE; row++) {
 function busyPolyDivider(index) {
     const coorObj = coordinates[index]
 
-    const originalPolygonId = String(index + 1);
-    const originalIdx = boxes.findIndex((b) => b.polygonId === originalPolygonId);
-    if (originalIdx !== -1) {
-        boxes.splice(originalIdx, 1);
-    }
-
-
     const latStepDivider = (coorObj.north - coorObj.south) / 2;
     const lngStepDivider = (coorObj.east - coorObj.west) / 2;
 

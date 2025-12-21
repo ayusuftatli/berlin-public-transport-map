@@ -2,7 +2,12 @@
  * Rate Limit UI - Frontend display of backend VBB API rate limit stats
  */
 
-const API_BASE = window.location.hostname === 'localhost'
+// Check if running locally (supports both localhost and 127.0.0.1)
+const isLocal = window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname === '';
+
+const API_BASE = isLocal
     ? 'http://localhost:3000'
     : 'railway link'; //TODO: change this before deployment
 
