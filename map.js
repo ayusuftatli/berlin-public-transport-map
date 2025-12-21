@@ -53,8 +53,7 @@ function drawLabeledPolygon(bounds, label) {
         .openTooltip();
 }
 
-// Array items: { bbox: string, polygonId: string }
-const boxes = [];
+
 const coordinates = [];
 
 for (let row = 0; row < GRID_SIZE; row++) {
@@ -68,7 +67,6 @@ for (let row = 0; row < GRID_SIZE; row++) {
 
         const id = row * GRID_SIZE + col + 1;
         coordinates.push(bounds);
-        boxes.push({ bbox: buildBBox(bounds), polygonId: String(id) });
         drawLabeledPolygon(bounds, `Polygon ${id}`);
     }
 }
@@ -99,23 +97,15 @@ function busyPolyDivider(index) {
 
             const id = row * 2 + col + 1;
 
-            boxes.push({
-                bbox: buildBBox(bounds),
-                polygonId: `${index + 1}-${id}`
-            });
+
             drawLabeledPolygon(bounds, `Polygon ${index + 1}-${id}`);
         }
     }
-    return boxes;
+
 }
 
 busyPolyDivider(5)
 busyPolyDivider(9)
-// Remove Polygon 4 by id (indexes shift after splits)
-{
-    const idx = boxes.findIndex((b) => b.polygonId === '4');
-    if (idx !== -1) boxes.splice(idx, 1);
-}
 
 
 
@@ -155,11 +145,9 @@ function getMarkerStyle(type, isMissed = false) {
 // update marker function
 async function updateMarkers() {
 
-    const results = await Promise.all(
-        boxes.map(({ bbox, polygonId }) => getData(bbox, polygonId))
-    );
 
-    const allData = results.flat();
+
+    const allData = await getData();
 
     if (!Array.isArray(allData) || allData.length === 0) {
         return;

@@ -3,6 +3,7 @@ import cors from 'cors';
 import cache from './cache.js';
 import poller from './vbbPoller.js';
 import config from './config.js';
+import * as rateLimitTracker from './rateLimitTracker.js';
 
 const app = express();
 const PORT = config.PORT;
@@ -79,6 +80,17 @@ app.get('/api/stats', (req, res) => {
     }
 });
 
+// return VBB API rate limit statistics
+app.get('/api/rate-limit', (req, res) => {
+    try {
+        const stats = rateLimitTracker.getStats();
+        res.json(stats);
+    } catch (error) {
+        console.error('[API] /api/rate-limit error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 // deployment health check
 
 app.get('/health', (req, res) => {
@@ -120,7 +132,8 @@ const server = app.listen(PORT, () => {
     console.log('API Endpoints');
     console.log(` GET http://localhost:${PORT}/api/movements`);
     console.log(` GET http://localhost:${PORT}/api/stats`);
-    console.log(` GET http://localhost${PORT}/api/health`)
+    console.log(` GET http://localhost:${PORT}/api/rate-limit`);
+    console.log(` GET http://localhost:${PORT}/health`)
 
 });
 

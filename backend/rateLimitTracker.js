@@ -62,31 +62,3 @@ export function getStats() {
 export function reset() {
     requestTimestamps = [];
 }
-
-/**
- * Update the UI card with current stats
- */
-export function updateUI() {
-    const stats = getStats();
-    const countElement = document.getElementById('rate-count');
-    const cardElement = document.getElementById('rate-limit-card');
-
-    if (countElement) {
-        countElement.textContent = `${stats.count}/${stats.limit}`;
-    }
-
-    if (cardElement) {
-        // Update card styling based on usage
-        cardElement.classList.remove('warning', 'critical');
-        if (stats.isCritical) {
-            cardElement.classList.add('critical');
-        } else if (stats.isWarning) {
-            cardElement.classList.add('warning');
-        }
-    }
-
-    return stats;
-}
-
-// Auto-update UI every second to show decaying count
-setInterval(updateUI, 1000);

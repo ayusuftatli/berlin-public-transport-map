@@ -1,5 +1,6 @@
 import cache from './cache.js';
 import config from './config.js';
+import * as rateLimitTracker from './rateLimitTracker.js';
 
 const POLL_INTERVAL_MS = 20000;
 
@@ -20,6 +21,9 @@ async function fetchBox(box) {
     const url = `${VBB_BASE_URL}/radar?north=${box.north}&west=${box.west}&south=${box.south}&east=${box.east}`;
 
     try {
+        // Record API request for rate limit tracking
+        rateLimitTracker.recordRequest();
+
         const response = await fetch(url);
 
         if (!response.ok) {

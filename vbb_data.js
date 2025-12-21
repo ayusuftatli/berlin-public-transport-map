@@ -1,52 +1,40 @@
 
 
 
-import { recordRequest, updateUI } from './rateLimitTracker.js';
+const API_BASE = window.location.hostname === 'localhost'
+    ? 'http://localhost:3000'
+    : 'railway link'; //TODO: change this before deployment
 
-export async function getData(bbox, polygonId = '?') {
+export async function getData() {
 
-    const url = `https://v6.vbb.transport.rest/radar?${bbox}`;
-
-
-
-    const polyTag = `[Polygon ${polygonId}] `;
-
-
-
+    const url = `${API_BASE}/api/movements`;
+    const tag = '[Backend] '; // what does this do?
 
     try {
-        // Record this request for rate limiting
-        const stats = recordRequest();
-        updateUI();
-        console.log(`${polyTag}[RateLimit] ${stats.count}/${stats.limit} requests in last minute (${stats.percentage}%)`);
+        console.log(`${tag}Fetching from backend...`);
 
         const response = await fetch(url);
 
         if (!response.ok) {
             const errorData = await response.text();
-            console.error(`${polyTag}[getData] API Error (${response.status}):`, errorData);
-            throw new Error(`Response status ${response.status}: ${errorData}`);
+            console.error(`${tag}API Error (${response.status}):`, errorData);
+            throw new Error(`Response status ${response.status}`);
         }
 
         const result = await response.json();
-        console.log(`${polyTag}[getData] Movements count:`, result.movements?.length || 0);
+        console.log(`${tag}Movements`, result.movements?.legnth || 0);
+        console.log(`${tag}Cache age:`, result.meta?.ageMs, 'ms');
 
-
-
-
-
-        return result.movements.map(movement => ({
-            name: movement.line.name,
-            direction: movement.direction,
-            tripId: movement.tripId,
-            latitude: movement.location.latitude,
-            longitude: movement.location.longitude,
-            type: movement.line.product
-        }));
+        // backend returns pre-processed data
+        return result.movements || [];
     } catch (error) {
-        console.error(`${polyTag}[getData] CATCH block - error:`, error.message);
-        console.error(`${polyTag}[getData] Full error:`, error);
+        console.error(`${tag}Error:`, error.message);
         return [];
     }
 
+
+
+
+
 }
+
