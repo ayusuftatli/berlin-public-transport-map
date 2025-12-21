@@ -6,9 +6,9 @@ map.getPane("polygonsPane").style.zIndex = 400;
 map.createPane("markersPane");
 map.getPane("markersPane").style.zIndex = 650;
 
-L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     maxZoom: 19,
-    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    attribution: '© OpenStreetMap contributors © CARTO'
 }).addTo(map);
 
 
