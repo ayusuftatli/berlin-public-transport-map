@@ -2,20 +2,14 @@ import express from 'express';
 import cors from 'cors';
 import cache from './cache.js';
 import poller from './vbbPoller.js';
+import config from './config.js';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = config.PORT;
 
 //cors
 
-const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
-    ? process.env.ALLOWED_ORIGINS.split(',')
-    : [
-        'http://localhost:5500',
-        'http://127.0.0.1:5500',
-        'http://localhost:5501',
-        'http://127.0.0.1:5501'
-    ];
+const ALLOWED_ORIGINS = config.ALLOWED_ORIGINS;
 
 const corsOptions = {
     origin: function (origin, callback) {

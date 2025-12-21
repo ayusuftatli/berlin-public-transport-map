@@ -141,7 +141,7 @@ Every 20 seconds:
 
 ---
 
-#### Step 1.4: Create the Express Server
+#### Step 1.4: Create the Express Server - dones
 
 **File**: `backend/index.js`
 
@@ -190,7 +190,7 @@ cors({
 
 ---
 
-#### Step 1.5: Create Configuration Module
+#### Step 1.5: Create Configuration Module - done
 
 **File**: `backend/config.js`
 
