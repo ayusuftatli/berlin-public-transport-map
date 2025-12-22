@@ -1,4 +1,5 @@
 import { getData } from './vbb_data.js'
+import { getLineColors } from './lineColors.js'
 
 const map = L.map('map').setView([52.52, 13.414], 11);
 map.createPane("polygonsPane");
@@ -33,9 +34,7 @@ L.polygon([
 const latStep = (north - south) / GRID_SIZE;
 const lngStep = (east - west) / GRID_SIZE;
 
-function buildBBox({ north, west, south, east }) {
-    return `north=${north}&west=${west}&south=${south}&east=${east}`;
-}
+
 
 function drawLabeledPolygon(bounds, label) {
     return L.polygon([
@@ -166,15 +165,24 @@ async function updateMarkers() {
                 startLng = movement.longitude;
             }
 
+            const colors = getLineColors(movement.name, movement.type);
+            const popupContent = `
+                <div class="vehicle-card">
+                    <div class="vehicle-header">
+                        <span class="vehicle-badge" style="background: ${colors.background}; color: ${colors.text};">${movement.name}</span>
+                    </div>
+                    <div class="vehicle-direction">→ ${movement.direction}</div>
+                    <div class="vehicle-details">
+                        <small>Trip: ${movement.tripId}</small><br>
+                        <small>Type: ${movement.type}</small>
+                    </div>
+                </div>
+            `;
+
             const createdMarker = L.circleMarker(
                 [startLat, startLng],
                 getMarkerStyle(movement.type)
-            ).addTo(markersLayer).bindPopup(
-                `Name: ${movement.name}<br>
-            Direction: ${movement.direction}<br>
-            tripId: ${movement.tripId}<br>
-            type: ${movement.type}`
-            );
+            ).addTo(markersLayer).bindPopup(popupContent);
 
             markers.set(movement.tripId, {
                 marker: createdMarker,

@@ -16,6 +16,10 @@
     <div id="map">
     </div>
     <div id="controls">
+        <div class="filter-handle">
+            <div class="handle-bar"></div>
+            <span class="handle-text">Filters</span>
+        </div>
         <div hidden id="debugging-controls">
             <button id="refresh-button">Refresh</button>
             <div id="rate-limit-card">
@@ -76,6 +80,33 @@
         </fieldset>
 
     </div>
+    <script>
+        // Bottom sheet toggle for mobile
+        document.addEventListener('DOMContentLoaded', () => {
+            const controls = document.getElementById('controls');
+            const filterHandle = document.querySelector('.filter-handle');
+
+            if (filterHandle) {
+                filterHandle.addEventListener('click', () => {
+                    controls.classList.toggle('open');
+                });
+
+                // Close when tapping outside on mobile
+                document.addEventListener('click', (e) => {
+                    if (window.innerWidth <= 768 &&
+                        controls.classList.contains('open') &&
+                        !controls.contains(e.target)) {
+                        controls.classList.remove('open');
+                    }
+                });
+
+                // Prevent closing when clicking inside controls
+                controls.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                });
+            }
+        });
+    </script>
     <script type="module" src="rateLimitUI.js"></script>
     <script type="module" src="map.js"></script>
 </body>

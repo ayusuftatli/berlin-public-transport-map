@@ -31,12 +31,19 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// Request logging middleware 
+// Request logging middleware
+// Skip logging for frequently polled endpoints to reduce log spam
+const SILENT_PATHS = ['/api/rate-limit', '/health'];
 
 app.use((req, res, next) => {
     const start = Date.now();
 
     res.on('finish', () => {
+        // Skip logging for silent paths
+        if (SILENT_PATHS.includes(req.path)) {
+            return;
+        }
+
         const duration = Date.now() - start;
         console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} ${res.statusCode} - ${duration}ms`);
     });
