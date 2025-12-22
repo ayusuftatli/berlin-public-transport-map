@@ -16,13 +16,19 @@
     <div id="map">
     </div>
     <div id="controls">
-        <button id="refresh-button">Refresh</button>
-        <div id="rate-limit-card">
-            <span class="label">API Requests:</span>
-            <span id="rate-count">0/100</span>
-            <span class="label">/min</span>
+        <div hidden id="debugging-controls">
+            <button id="refresh-button">Refresh</button>
+            <div id="rate-limit-card">
+                <span class="label">API Requests:</span>
+                <span id="rate-count">0/100</span>
+                <span class="label">/min</span>
+                <div id="marker-count"></div>
+                <button id="polygon-button">Polygon <span id="polygon-button-span">Off</span></button>
+            </div>
         </div>
-        <fieldset id="filter">
+
+        <fieldset id="movement-filter" class="filter">
+            <legend>Vehicles</legend>
             <div>
                 <input type="checkbox" id="subway" name="subway" value="subway" checked />
                 <label for="subway">U-Bahn</label>
@@ -36,20 +42,39 @@
                 <label for="suburban">S-Bahn</label>
             </div>
             <div>
-                <input type="checkbox" id="bus" name="bus" value="bus" checked />
+                <input type="checkbox" id="bus" name="bus" value="bus" />
                 <label for="bus">Bus</label>
             </div>
             <div>
-                <input type="checkbox" id="regional" name="regional" value="regional" checked />
+                <input type="checkbox" id="regional" name="regional" value="regional" />
                 <label for="regional">Regional Train</label>
             </div>
             <div>
-                <input type="checkbox" id="express" name="express" value="express" checked />
+                <input type="checkbox" id="express" name="express" value="express" />
                 <label for="express">Express Train</label>
             </div>
         </fieldset>
-        <div id="marker-count"></div>
-        <button id="polygon-button">Polygon <span id="polygon-button-span">On</span></button>
+
+        <fieldset id="line-filter" class="filter">
+            <legend>Routes</legend>
+            <div>
+                <input type="checkbox" id="subway_line" name="subway_line" value="subway_line" checked />
+                <label for="subway_line">U-Bahn</label>
+            </div>
+            <div>
+                <input type="checkbox" id="tram_line" name="tram_line" value="tram_line" checked />
+                <label for="tram_line">Tram</label>
+            </div>
+            <div>
+                <input type="checkbox" id="suburban_line" name="suburban_line" value="suburban_line" checked />
+                <label for="suburban_line">S-Bahn</label>
+            </div>
+            <div>
+                <input type="checkbox" id="bus_line" name="bus_line" value="bus_line" />
+                <label for="bus_line">Bus</label>
+            </div>
+        </fieldset>
+
     </div>
     <script type="module" src="rateLimitUI.js"></script>
     <script type="module" src="map.js"></script>

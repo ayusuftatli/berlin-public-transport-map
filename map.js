@@ -235,14 +235,15 @@ function animateMarker(marker, newLat, newLng) {
     animate();
 }
 
-const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+const movementFilter = document.getElementById("movement-filter");
+const momvementCheckboxes = movementFilter.querySelectorAll('input[type="checkbox"]');
 
-checkboxes.forEach(checkbox => {
+momvementCheckboxes.forEach(checkbox => {
     checkbox.addEventListener("change", filterMarkers);
 });
 
 function filterMarkers() {
-    const checked = new Set(Array.from(checkboxes)
+    const checked = new Set(Array.from(momvementCheckboxes)
         .filter(checkbox => checkbox.checked)
         .map(checkbox => checkbox.value));
 
@@ -257,6 +258,7 @@ function filterMarkers() {
 }
 
 
+
 // buttons and stuff
 const markerCountDiv = document.getElementById("marker-count");
 
@@ -264,6 +266,8 @@ const markerCountDiv = document.getElementById("marker-count");
 
 const polygonButton = document.getElementById("polygon-button");
 const polygonButtonSpan = document.getElementById("polygon-button-span");
+
+map.removeLayer(polygonGroup);
 
 polygonButton.addEventListener("click", () => {
     if (map.hasLayer(polygonGroup)) {
@@ -278,16 +282,55 @@ polygonButton.addEventListener("click", () => {
 
 // load public transport lines
 
-async function loadGeoJSON(url, color) {
+const geoJSONLayers = new Map();
+
+async function loadGeoJSON(url, color, type) {
     try {
         const response = await fetch(url);
         const data = await response.json();
-        L.geoJSON(data, { style: { "color": color } }).addTo(map);
+        const layer = L.geoJSON(data, { style: { "color": color } }).addTo(map);
+
+        geoJSONLayers.set(type, layer);
     } catch (error) {
         console.error('Error loading GeoJSON:', error);
     }
 }
 
-loadGeoJSON(`ubahn_line.geojson`, "blue")
-loadGeoJSON(`s-bahn_lines.geojson`, "green")
-loadGeoJSON(`tram_line.geojson`, "red")
+(async () => {
+    await loadGeoJSON(`ubahn_line.geojson`, "blue", "subway_line");
+    await loadGeoJSON(`s-bahn_lines.geojson`, "green", "suburban_line");
+    await loadGeoJSON(`tram_line.geojson`, "red", "tram_line");
+    await loadGeoJSON(`bus_bvg_only.geojson`, "purple", "bus_line");
+
+    // Apply initial filter state after all layers are loaded
+    filterLines();
+})();
+
+
+
+const lineFilter = document.getElementById("line-filter");
+const lineCheckboxes = lineFilter.querySelectorAll('input[type="checkbox"');
+
+function filterLines() {
+    const checked = new Set(Array.from(lineCheckboxes) // what is set?
+        .filter(checkbox => checkbox.checked)
+        .map(checkbox => checkbox.value)
+    );
+
+    geoJSONLayers.forEach((layer, type) => {
+        if (checked.has(type)) {
+            if (!map.hasLayer(layer)) {
+                layer.addTo(map);
+            }
+        } else {
+            if (map.hasLayer(layer)) {
+                map.removeLayer(layer);
+            }
+        }
+    })
+
+}
+
+lineCheckboxes.forEach(checkbox => {
+    checkbox.addEventListener("change", filterLines);
+})
