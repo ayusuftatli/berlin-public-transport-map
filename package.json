@@ -4,6 +4,10 @@
     "description": "VBB transit map visualization with tripId tracking",
     "type": "module",
     "scripts": {
+        "start": "npx serve . -p ${PORT:-8080}",
         "track": "node tripTracker.js"
+    },
+    "dependencies": {
+        "serve": "^14.2.1"
     }
 }

@@ -12,7 +12,7 @@ const CONFIG = {
     production: {
         // TODO: Replace this with your actual Railway backend URL after deployment
         // Example: 'https://your-backend-app.up.railway.app'
-        API_BASE: 'REPLACE_WITH_RAILWAY_URL'
+        API_BASE: 'https://zestful-learning-production.up.railway.app'
     }
 };
 
