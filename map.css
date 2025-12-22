@@ -172,6 +172,30 @@ button {
     line-height: 1.6;
 }
 
+/* Station markers */
+.station-marker {
+    border: none !important;
+    background: transparent !important;
+}
+
+/* Station popups */
+.station-popup {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: #fff;
+    font-size: 13px;
+}
+
+.station-popup strong {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 14px;
+}
+
+.station-popup small {
+    opacity: 0.7;
+    font-size: 11px;
+}
+
 /* Filter handle (hidden on desktop) */
 .filter-handle {
     display: none;

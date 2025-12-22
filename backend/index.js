@@ -4,6 +4,7 @@ import cache from './cache.js';
 import poller from './vbbPoller.js';
 import config from './config.js';
 import * as rateLimitTracker from './rateLimitTracker.js';
+import stationsModule from './stations.js';
 
 const app = express();
 const PORT = config.PORT;
@@ -98,6 +99,22 @@ app.get('/api/rate-limit', (req, res) => {
     }
 });
 
+// return all VBB stations with major/minor categorization
+app.get('/api/stations', (req, res) => {
+    try {
+        const stations = stationsModule.getAllStations();
+        const stats = stationsModule.getStats();
+
+        res.json({
+            stations: stations,
+            meta: stats
+        });
+    } catch (error) {
+        console.error('[API] /api/stations error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 // deployment health check
 
 app.get('/health', (req, res) => {
@@ -140,6 +157,7 @@ const server = app.listen(PORT, () => {
     console.log(` GET http://localhost:${PORT}/api/movements`);
     console.log(` GET http://localhost:${PORT}/api/stats`);
     console.log(` GET http://localhost:${PORT}/api/rate-limit`);
+    console.log(` GET http://localhost:${PORT}/api/stations`);
     console.log(` GET http://localhost:${PORT}/health`)
 
 });

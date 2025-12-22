@@ -1,5 +1,6 @@
 import { getData } from './vbb_data.js'
 import { getLineColors } from './lineColors.js'
+import { getStations } from './stations.js'
 
 const map = L.map('map').setView([52.52, 13.414], 11);
 map.createPane("polygonsPane");
@@ -105,6 +106,9 @@ busyPolyDivider(9)
 //Layer group to hold all markers
 const markersLayer = L.layerGroup().addTo(map);
 
+//Layer group to hold all stations
+const stationsLayer = L.layerGroup().addTo(map);
+
 const refreshButton = document.getElementById("refresh-button");
 
 refreshButton.addEventListener("click", updateMarkers)
@@ -133,6 +137,72 @@ function getMarkerStyle(type, isMissed = false) {
         pane: "markersPane"
     };
 }
+
+// Station marker configuration
+const STATION_CONFIG = {
+    MINOR_ZOOM_THRESHOLD: 13,  // Zoom level to show minor stations
+    MAJOR_SIZE: 6,             // Size in pixels for major stations
+    MINOR_SIZE: 4,             // Size in pixels for minor stations
+    COLOR: '#FFD700'           // Gold color for stations
+};
+
+function createStationMarker(station) {
+    const size = station.isMajor ?
+        STATION_CONFIG.MAJOR_SIZE :
+        STATION_CONFIG.MINOR_SIZE;
+
+    const icon = L.divIcon({
+        className: 'station-marker',
+        html: `<div style="
+            width: ${size}px;
+            height: ${size}px;
+            background-color: ${STATION_CONFIG.COLOR};
+            border: 1px solid #fff;
+        "></div>`,
+        iconSize: [size, size]
+    });
+
+    const popup = `
+        <div class="station-popup">
+            <strong>${station.name}</strong><br>
+            <small>Weight: ${station.weight}${station.isMajor ? ' (Major)' : ''}</small>
+        </div>
+    `;
+
+    return L.marker(
+        [station.latitude, station.longitude],
+        { icon: icon }
+    ).bindPopup(popup);
+}
+
+// Station data and visibility management
+let allStations = [];
+
+async function loadStations() {
+    allStations = await getStations();
+    updateStationVisibility();
+}
+
+function updateStationVisibility() {
+    stationsLayer.clearLayers();
+
+    const currentZoom = map.getZoom();
+
+    allStations.forEach(station => {
+        // Show major stations at all zoom levels
+        // Show minor stations only when zoomed in
+        const shouldShow = station.isMajor ||
+            currentZoom >= STATION_CONFIG.MINOR_ZOOM_THRESHOLD;
+
+        if (shouldShow) {
+            const marker = createStationMarker(station);
+            marker.addTo(stationsLayer);
+        }
+    });
+}
+
+// Update station visibility when zoom changes
+map.on('zoomend', updateStationVisibility);
 
 // update marker function
 async function updateMarkers() {
@@ -218,6 +288,7 @@ async function updateMarkers() {
 
 
 updateMarkers();
+loadStations();
 
 setInterval(updateMarkers, 20000)
 
@@ -342,3 +413,14 @@ function filterLines() {
 lineCheckboxes.forEach(checkbox => {
     checkbox.addEventListener("change", filterLines);
 })
+
+// Stations toggle
+const stationsCheckbox = document.getElementById('show_stations');
+
+stationsCheckbox.addEventListener('change', () => {
+    if (stationsCheckbox.checked) {
+        stationsLayer.addTo(map);
+    } else {
+        map.removeLayer(stationsLayer);
+    }
+});
