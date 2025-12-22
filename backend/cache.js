@@ -1,8 +1,15 @@
+// Helper for timestamps
+function timestamp() {
+    return new Date().toISOString();
+}
+
 // Private cache state (not exported directly)
 const cache = {
     movements: new Map(),
     lastUpdated: null,
-    updateCount: 0
+    updateCount: 0,
+    lastEmptyUpdate: null,
+    consecutiveEmptyUpdates: 0
 };
 
 /**
@@ -10,17 +17,40 @@ const cache = {
  * @param {Array} movements - Array of movement objects from VBB API
  */
 function update(movements) {
-    // Step1: Preserve revious positions for existing vehicles
+    const previousCount = cache.movements.size;
+
+    // FIX: Don't wipe cache when API returns empty data
+    // This prevents the "flying vehicles" issue when VBB API temporarily fails
+    if (movements.length === 0) {
+        cache.consecutiveEmptyUpdates++;
+        cache.lastEmptyUpdate = timestamp();
+        console.warn(`[Cache] [${timestamp()}] ⚠️ EMPTY UPDATE RECEIVED - PRESERVING EXISTING CACHE!`);
+        console.warn(`[Cache]   └─ Preserved cache size: ${previousCount}`);
+        console.warn(`[Cache]   └─ Consecutive empty updates: ${cache.consecutiveEmptyUpdates}`);
+        // Don't update lastUpdated - keep the old timestamp to show cache staleness
+        return; // EXIT EARLY - don't wipe the cache!
+    }
+
+    // Reset counter when we get valid data
+    if (cache.consecutiveEmptyUpdates > 0) {
+        console.log(`[Cache] [${timestamp()}] ✅ DATA RECOVERED after ${cache.consecutiveEmptyUpdates} empty updates`);
+    }
+    cache.consecutiveEmptyUpdates = 0;
+
+    // Step1: Preserve previous positions for existing vehicles
     const updatedVehicles = new Map();
+    let existingCount = 0;
+    let newCount = 0;
 
     for (const newMovement of movements) {
         const existing = cache.movements.get(newMovement.tripId);
 
         if (existing) {
-            //Vehicle exists -shift current to previous
+            existingCount++;
+            //Vehicle exists - shift current to previous
             updatedVehicles.set(newMovement.tripId, {
                 current: {
-                    ...newMovement, // why do we turn into array is it not alreaday array?
+                    ...newMovement,
                     timestamp: new Date()
                 },
                 previous: {
@@ -31,6 +61,7 @@ function update(movements) {
                 firstSeen: existing.firstSeen
             })
         } else {
+            newCount++;
             // New vehicle - no previous position
             updatedVehicles.set(newMovement.tripId, {
                 current: {
@@ -47,7 +78,9 @@ function update(movements) {
     cache.lastUpdated = new Date();
     cache.updateCount += 1;
 
-    console.log(`[Cache] Updated: ${cache.movements.size} movements (${movements.length - updatedVehicles.size} new)`);
+    console.log(`[Cache] [${timestamp()}] Update #${cache.updateCount}:`);
+    console.log(`[Cache]   └─ Total: ${cache.movements.size} (was ${previousCount})`);
+    console.log(`[Cache]   └─ Existing: ${existingCount}, New: ${newCount}`);
 }
 
 /**

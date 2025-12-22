@@ -134,16 +134,52 @@ function getMarkerStyle(type, isMissed = false) {
     };
 }
 
+// Helper for timestamps
+function timestamp() {
+    return new Date().toISOString();
+}
+
+// Track update cycle for debugging
+let updateCycleCount = 0;
+let lastNonEmptyUpdate = null;
+let consecutiveEmptyUpdates = 0;
+
 // update marker function
 async function updateMarkers() {
+    updateCycleCount++;
+    const cycleId = updateCycleCount;
+    const tag = '[Map]';
 
+    console.log(`${tag} [${timestamp()}] ━━━ Update Cycle #${cycleId} START ━━━`);
+    console.log(`${tag}   └─ Current markers: ${markers.size}`);
 
-
-    const allData = await getData();
+    const result = await getData();
+    const { movements: allData, cacheAge, isStale } = result;
 
     if (!Array.isArray(allData) || allData.length === 0) {
+        consecutiveEmptyUpdates++;
+        console.warn(`${tag} [${timestamp()}] ⚠️ EMPTY DATA - Skipping update`);
+        console.warn(`${tag}   └─ Consecutive empty updates: ${consecutiveEmptyUpdates}`);
+        console.warn(`${tag}   └─ Last non-empty update: ${lastNonEmptyUpdate || 'never'}`);
+        console.warn(`${tag}   └─ Markers still on map: ${markers.size}`);
+        console.log(`${tag} [${timestamp()}] ━━━ Update Cycle #${cycleId} END (empty) ━━━`);
         return;
     }
+
+    // Got data! Reset counter and track time
+    if (consecutiveEmptyUpdates > 0) {
+        console.log(`${tag} [${timestamp()}] ✅ DATA RECOVERED after ${consecutiveEmptyUpdates} empty updates`);
+    }
+    consecutiveEmptyUpdates = 0;
+    lastNonEmptyUpdate = timestamp();
+
+    // FIX: If cache is stale, use teleport mode (no animation)
+    const useAnimation = !isStale;
+    if (isStale) {
+        console.warn(`${tag} [${timestamp()}] 📍 STALE CACHE (${cacheAge}ms) - Using TELEPORT mode`);
+    }
+
+    console.log(`${tag} [${timestamp()}] Processing ${allData.length} movements (animation: ${useAnimation})`);
 
     for (const entry of markers.values()) {
         entry.misses += 1;
@@ -155,12 +191,12 @@ async function updateMarkers() {
 
             let startLat, startLng;
 
-            if (movement.previousPosition) {
-                // Start at previous position for immediate animation
+            if (movement.previousPosition && useAnimation) {
+                // Start at previous position for immediate animation (only if fresh data)
                 startLat = movement.previousPosition.latitude;
                 startLng = movement.previousPosition.longitude;
             } else {
-                // No histrory - start at current position
+                // No history OR stale cache - start at current position (teleport)
                 startLat = movement.latitude;
                 startLng = movement.longitude;
             }
@@ -191,27 +227,43 @@ async function updateMarkers() {
                 type: movement.type
             })
 
-            // Start animation if we have previous position
-            if (movement.previousPosition) {
+            // Start animation if we have previous position AND fresh data
+            if (movement.previousPosition && useAnimation) {
                 animateMarker(createdMarker, movement.latitude, movement.longitude)
             }
         } else {
             const entry = markers.get(movement.tripId);
             entry.misses = 0;
             entry.lastSeen = Date.now()
-            animateMarker(entry.marker, movement.latitude, movement.longitude);
+
+            // FIX: Teleport if stale, animate if fresh
+            if (useAnimation) {
+                animateMarker(entry.marker, movement.latitude, movement.longitude);
+            } else {
+                // Teleport - instant position update
+                entry.marker.setLatLng([movement.latitude, movement.longitude]);
+            }
             entry.marker.setStyle(getMarkerStyle(entry.type));
         }
     });
     // cleanup
+    let removedCount = 0;
+    let staleCount = 0;
     for (const [tripId, entry] of markers.entries()) {
         if (entry.misses >= 3) {
             entry.marker.removeFrom(markersLayer);
             markers.delete(tripId);
+            removedCount++;
         } else if (entry.misses >= 1) {
-            entry.marker.setStyle(getMarkerStyle(entry.type, true))
+            entry.marker.setStyle(getMarkerStyle(entry.type, true));
+            staleCount++;
         }
     }
+
+    console.log(`${tag} [${timestamp()}] Cleanup: ${removedCount} removed, ${staleCount} stale`);
+    console.log(`${tag} [${timestamp()}] ━━━ Update Cycle #${cycleId} END ━━━`);
+    console.log(`${tag}   └─ Final marker count: ${markers.size}`);
+
     filterMarkers()
     markerCountDiv.innerHTML = `<p>Marker count is ${markers.size}`
 }
@@ -219,12 +271,15 @@ async function updateMarkers() {
 
 updateMarkers();
 
-setInterval(updateMarkers, 20000)
+// FIX: Offset from backend's 20-second poll to reduce race conditions
+// Frontend polls every 19 seconds, backend every 20 seconds
+// This ensures frontend usually gets fresh cache data
+setInterval(updateMarkers, 19000)
 
 function animateMarker(marker, newLat, newLng) {
     const start = marker.getLatLng();
     const end = { lat: newLat, lng: newLng };
-    const duration = 20000;
+    const duration = 19000; // Match frontend poll interval
     const startTime = performance.now();
 
     function animate() {
