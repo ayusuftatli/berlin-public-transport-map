@@ -62,11 +62,17 @@ export async function getData() {
                 fetchHistory.map(h => `${h.count} @ ${h.time}`).join(', '));
         }
 
+        // DIAGNOSTIC: Track timing pattern
+        const isStale = cacheAge > 15000;
+        if (isStale) {
+            console.warn(`${tag} ⚠️ STALE DETECTED: Cache age ${cacheAge}ms exceeds 15s threshold`);
+        }
+
         // Return both movements and cache age so frontend can decide animation strategy
         return {
             movements: result.movements || [],
             cacheAge: cacheAge,
-            isStale: cacheAge > 15000  // Pre-calculate if cache is stale (>15 seconds)
+            isStale: isStale  // Pre-calculate if cache is stale (>15 seconds)
         };
     } catch (error) {
         console.error(`${tag} [${timestamp()}] ❌ Fetch Error: ${error.message}`);

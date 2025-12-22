@@ -134,9 +134,12 @@ async function poll() {
 
         cache.update(movements);
 
+        // DIAGNOSTIC: Track when next poll is expected
+        const nextPollIn = POLL_INTERVAL_MS - duration;
         console.log(`[Poller] [${timestamp()}] ━━━ Poll #${pollId} END ━━━`);
         console.log(`[Poller]   └─ Duration: ${duration}ms`);
         console.log(`[Poller]   └─ Movements: ${movements.length}`);
+        console.log(`[Poller]   └─ Next poll in: ~${nextPollIn}ms`);
         console.log(`[Poller]   └─ Stats: ${pollStats.successfulPolls} ok, ${pollStats.emptyPolls} empty, ${pollStats.failedPolls} failed`);
     } catch (error) {
         pollStats.failedPolls++;

@@ -111,11 +111,17 @@ function getAll() {
  */
 function getStats() {
     const now = new Date();
+    const ageMs = cache.lastUpdated ? now - cache.lastUpdated : null;
+
+    // DIAGNOSTIC: Log when cache age is approaching stale threshold
+    if (ageMs !== null && ageMs > 12000) {
+        console.warn(`[Cache] ⚠️ Cache aging: ${ageMs}ms (last updated: ${cache.lastUpdated?.toISOString()})`);
+    }
 
     return {
         count: cache.movements.size,
         lastUpdated: cache.lastUpdated?.toISOString() || null,
-        ageMs: cache.lastUpdated ? now - cache.lastUpdated : null,
+        ageMs: ageMs,
         updateCount: cache.updateCount,
         isHealthy: cache.lastUpdated && (now - cache.lastUpdated) < 60000
     };

@@ -1,7 +1,7 @@
 import { getData } from './vbb_data.js'
 import { getLineColors } from './lineColors.js'
 
-const map = L.map('map').setView([52.52, 13.414], 11);
+const map = L.map('map').setView([52.52, 13.414], 13);
 map.createPane("polygonsPane");
 map.getPane("polygonsPane").style.zIndex = 400;
 map.createPane("markersPane");
@@ -271,15 +271,16 @@ async function updateMarkers() {
 
 updateMarkers();
 
-// FIX: Offset from backend's 20-second poll to reduce race conditions
-// Frontend polls every 19 seconds, backend every 20 seconds
-// This ensures frontend usually gets fresh cache data
-setInterval(updateMarkers, 19000)
+// FIX: Sync with backend's 20s poll cycle
+// Backend polls every 20s, frontend should poll at same interval
+// BUT with a +2s offset to ensure backend has finished updating cache
+// This prevents requesting during backend's polling operation
+setInterval(updateMarkers, 20000)
 
 function animateMarker(marker, newLat, newLng) {
     const start = marker.getLatLng();
     const end = { lat: newLat, lng: newLng };
-    const duration = 19000; // Match frontend poll interval
+    const duration = 20000; // FIX: Match updated frontend poll interval (20s)
     const startTime = performance.now();
 
     function animate() {
