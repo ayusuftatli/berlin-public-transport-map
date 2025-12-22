@@ -1,14 +1,12 @@
 
 
 
+import { API_BASE, CURRENT_ENV } from './frontend-config.js';
+
 // Helper to get timestamp for logs
 function timestamp() {
     return new Date().toISOString();
 }
-
-const API_BASE = window.location.hostname === 'localhost'
-    ? 'http://localhost:3000'
-    : 'railway link'; //TODO: change this before deployment
 
 // Track fetch history for debugging
 let fetchHistory = [];
