@@ -173,10 +173,10 @@ async function updateMarkers() {
     consecutiveEmptyUpdates = 0;
     lastNonEmptyUpdate = timestamp();
 
-    // FIX: If cache is stale, use teleport mode (no animation)
+    // FIX: If cache is stale (>40s, missed 2+ backend polls), use teleport mode (no animation)
     const useAnimation = !isStale;
     if (isStale) {
-        console.warn(`${tag} [${timestamp()}] 📍 STALE CACHE (${cacheAge}ms) - Using TELEPORT mode`);
+        console.warn(`${tag} [${timestamp()}] 📍 SEVERELY STALE CACHE (${cacheAge}ms > 40s) - Using TELEPORT mode`);
     }
 
     console.log(`${tag} [${timestamp()}] Processing ${allData.length} movements (animation: ${useAnimation})`);

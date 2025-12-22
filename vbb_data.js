@@ -61,9 +61,11 @@ export async function getData() {
         }
 
         // DIAGNOSTIC: Track timing pattern
-        const isStale = cacheAge > 15000;
+        // FIX: Increased threshold to 40s to accommodate 20s backend polling cycle
+        // Only teleport if backend has missed 2+ polling cycles (truly stale)
+        const isStale = cacheAge > 40000;
         if (isStale) {
-            console.warn(`${tag} ⚠️ STALE DETECTED: Cache age ${cacheAge}ms exceeds 15s threshold`);
+            console.warn(`${tag} ⚠️ STALE DETECTED: Cache age ${cacheAge}ms exceeds 40s threshold (backend likely down)`);
         }
 
         // Return both movements and cache age so frontend can decide animation strategy
