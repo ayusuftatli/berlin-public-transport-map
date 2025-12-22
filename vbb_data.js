@@ -11,6 +11,8 @@ export async function getData() {
     const tag = '[Backend] '; // what does this do?
 
     try {
+        console.log(`${tag}API_BASE is:`, API_BASE);
+        console.log(`${tag}Full URL:`, url);
         console.log(`${tag}Fetching from backend...`);
 
         const response = await fetch(url);

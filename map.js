@@ -153,8 +153,21 @@ async function updateMarkers() {
     allData.forEach((movement) => {
 
         if (!markers.has(movement.tripId)) {
+
+            let startLat, startLng;
+
+            if (movement.previousPosition) {
+                // Start at previous position for immediate animation
+                startLat = movement.previousPosition.latitude;
+                startLng = movement.previousPosition.longitude;
+            } else {
+                // No histrory - start at current position
+                startLat = movement.latitude;
+                startLng = movement.longitude;
+            }
+
             const createdMarker = L.circleMarker(
-                [movement.latitude, movement.longitude],
+                [startLat, startLng],
                 getMarkerStyle(movement.type)
             ).addTo(markersLayer).bindPopup(
                 `Name: ${movement.name}<br>
@@ -169,6 +182,11 @@ async function updateMarkers() {
                 lastSeen: Date.now(),
                 type: movement.type
             })
+
+            // Start animation if we have previous position
+            if (movement.previousPosition) {
+                animateMarker(createdMarker, movement.latitude, movement.longitude)
+            }
         } else {
             const entry = markers.get(movement.tripId);
             entry.misses = 0;
