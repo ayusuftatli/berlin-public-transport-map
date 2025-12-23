@@ -220,11 +220,19 @@ async function updateMarkers() {
                 getMarkerStyle(movement.type)
             ).addTo(markersLayer).bindPopup(popupContent);
 
+            // Add click handler for route selection
+            createdMarker.on('click', function (e) {
+                L.DomEvent.stopPropagation(e); // Prevent map click from firing
+                console.log(`[DEBUG] Marker clicked! Line name: "${movement.name}"`);
+                selectRouteByRef(movement.name);
+            });
+
             markers.set(movement.tripId, {
                 marker: createdMarker,
                 misses: 0,
                 lastSeen: Date.now(),
-                type: movement.type
+                type: movement.type,
+                lineName: movement.name // Store line name/ref for route selection
             })
 
             // Start animation if we have previous position AND fresh data
@@ -347,18 +355,106 @@ polygonButton.addEventListener("click", () => {
 // load public transport lines
 
 const geoJSONLayers = new Map();
+const routeFeatures = new Map(); // Store individual route features by ref
+let selectedRoute = null; // Track currently selected route
 
 async function loadGeoJSON(url, color, type) {
     try {
         const response = await fetch(url);
         const data = await response.json();
-        const layer = L.geoJSON(data, { style: { "color": color } }).addTo(map);
+        const layer = L.geoJSON(data, {
+            style: { "color": color },
+            onEachFeature: function (feature, layer) {
+                // Store each route feature by its ref property
+                if (feature.properties && feature.properties.ref) {
+                    const ref = feature.properties.ref;
+                    console.log(`[DEBUG] Loading route feature with ref: "${ref}" from type: ${type}`);
+                    if (!routeFeatures.has(ref)) {
+                        routeFeatures.set(ref, []);
+                    }
+                    routeFeatures.get(ref).push({
+                        layer: layer,
+                        defaultColor: color,
+                        type: type
+                    });
+                } else {
+                    console.warn(`[DEBUG] Feature missing ref property in ${type}:`, feature.properties);
+                }
+            }
+        }).addTo(map);
 
         geoJSONLayers.set(type, layer);
     } catch (error) {
         console.error('Error loading GeoJSON:', error);
     }
 }
+
+// Function to select a route by ref and dim others
+function selectRouteByRef(ref) {
+    if (!ref) {
+        console.warn('[DEBUG] No ref provided for route selection');
+        return;
+    }
+
+    console.log(`[DEBUG] selectRouteByRef called with: "${ref}"`);
+    console.log(`[DEBUG] Available routes:`, Array.from(routeFeatures.keys()));
+    console.log(`[DEBUG] Route exists in map:`, routeFeatures.has(ref));
+
+    // If clicking the same route, deselect it
+    if (selectedRoute === ref) {
+        resetRouteSelection();
+        return;
+    }
+
+    selectedRoute = ref;
+    console.log(`[Route Selection] Selected route: ${ref}`);
+
+    // Dim all routes first
+    routeFeatures.forEach((features, routeRef) => {
+        features.forEach(featureData => {
+            if (routeRef === ref) {
+                // Highlight selected route - make it brighter and thicker
+                featureData.layer.setStyle({
+                    color: featureData.defaultColor,
+                    opacity: 1,
+                    weight: 5
+                });
+            } else {
+                // Dim other routes
+                featureData.layer.setStyle({
+                    color: '#555555',
+                    opacity: 0.2,
+                    weight: 2
+                });
+            }
+        });
+    });
+}
+
+// Function to reset route selection (show all routes normally)
+function resetRouteSelection() {
+    selectedRoute = null;
+    console.log('[Route Selection] Reset - showing all routes normally');
+
+    // Restore all routes to their default colors
+    routeFeatures.forEach((features) => {
+        features.forEach(featureData => {
+            featureData.layer.setStyle({
+                color: featureData.defaultColor,
+                opacity: 1,
+                weight: 3
+            });
+        });
+    });
+}
+
+// Add map click handler to deselect routes when clicking empty space
+map.on('click', function (e) {
+    // Only reset if there's a selected route and the click wasn't on a marker
+    if (selectedRoute && !e.originalEvent.defaultPrevented) {
+        resetRouteSelection();
+    }
+});
 
 (async () => {
     await loadGeoJSON(`lines/ubahn_line.geojson`, "blue", "subway_line");
@@ -368,6 +464,9 @@ async function loadGeoJSON(url, color, type) {
 
     // Apply initial filter state after all layers are loaded
     filterLines();
+
+    console.log(`[DEBUG] GeoJSON loading complete. Total routes stored: ${routeFeatures.size}`);
+    console.log(`[DEBUG] Route refs available:`, Array.from(routeFeatures.keys()));
 })();
 
 
