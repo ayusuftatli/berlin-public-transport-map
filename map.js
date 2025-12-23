@@ -1,9 +1,8 @@
 import { getData } from './vbb_data.js'
 import { getLineColors } from './lineColors.js'
+import { initDebuggingUI, updateMarkerCount } from './debugging_ui.js'
 
 const map = L.map('map').setView([52.52, 13.414], 13);
-map.createPane("polygonsPane");
-map.getPane("polygonsPane").style.zIndex = 400;
 map.createPane("markersPane");
 map.getPane("markersPane").style.zIndex = 650;
 
@@ -12,102 +11,8 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     attribution: '© OpenStreetMap contributors © CARTO'
 }).addTo(map);
 
-
-
-const north = 52.6755;
-const south = 52.3383;
-const west = 13.0884;
-const east = 13.7611;
-
-const GRID_SIZE = 4;
-
-const polygonGroup = L.featureGroup().addTo(map);
-
-L.polygon([
-    [north, west],
-    [north, east],
-    [south, east],
-    [south, west]
-], { pane: "polygonsPane" }).addTo(polygonGroup);
-
-// Calculate the Size of Each box
-const latStep = (north - south) / GRID_SIZE;
-const lngStep = (east - west) / GRID_SIZE;
-
-
-
-function drawLabeledPolygon(bounds, label) {
-    return L.polygon([
-        [bounds.north, bounds.west],
-        [bounds.north, bounds.east],
-        [bounds.south, bounds.east],
-        [bounds.south, bounds.west]
-    ], { pane: "polygonsPane" })
-        .addTo(polygonGroup)
-        .bindTooltip(label, {
-            permanent: true,
-            direction: 'center',
-            className: 'polygon-label'
-        })
-        .openTooltip();
-}
-
-
-const coordinates = [];
-
-for (let row = 0; row < GRID_SIZE; row++) {
-    for (let col = 0; col < GRID_SIZE; col++) {
-        const bounds = {
-            north: north - (row * latStep),
-            south: north - ((row + 1) * latStep),
-            west: west + (col * lngStep),
-            east: west + ((col + 1) * lngStep)
-        };
-
-        const id = row * GRID_SIZE + col + 1;
-        coordinates.push(bounds);
-        drawLabeledPolygon(bounds, `Polygon ${id}`);
-    }
-}
-
-// dividing the busy polygons into four
-
-function busyPolyDivider(index) {
-    const coorObj = coordinates[index]
-
-    const latStepDivider = (coorObj.north - coorObj.south) / 2;
-    const lngStepDivider = (coorObj.east - coorObj.west) / 2;
-
-    for (let row = 0; row < 2; row++) {
-        for (let col = 0; col < 2; col++) {
-            const bounds = {
-                north: coorObj.north - (row * latStepDivider),
-                south: coorObj.north - ((row + 1) * latStepDivider),
-                west: coorObj.west + (col * lngStepDivider),
-                east: coorObj.west + ((col + 1) * lngStepDivider)
-            };
-
-            const id = row * 2 + col + 1;
-
-
-            drawLabeledPolygon(bounds, `Polygon ${index + 1}-${id}`);
-        }
-    }
-
-}
-
-busyPolyDivider(5)
-busyPolyDivider(9)
-
-
-
-
 //Layer group to hold all markers
 const markersLayer = L.layerGroup().addTo(map);
-
-const refreshButton = document.getElementById("refresh-button");
-
-refreshButton.addEventListener("click", updateMarkers)
 
 const markers = new Map();
 
@@ -273,9 +178,12 @@ async function updateMarkers() {
     console.log(`${tag}   └─ Final marker count: ${markers.size}`);
 
     filterMarkers()
-    markerCountDiv.innerHTML = `<p>Marker count is ${markers.size}`
+    updateMarkerCount(markers.size);
 }
 
+
+// Initialize debugging UI (polygons, refresh button, marker count)
+initDebuggingUI(map, updateMarkers, markers);
 
 updateMarkers();
 
@@ -328,29 +236,6 @@ function filterMarkers() {
     })
 
 }
-
-
-
-// buttons and stuff
-const markerCountDiv = document.getElementById("marker-count");
-
-
-
-const polygonButton = document.getElementById("polygon-button");
-const polygonButtonSpan = document.getElementById("polygon-button-span");
-
-map.removeLayer(polygonGroup);
-
-polygonButton.addEventListener("click", () => {
-    if (map.hasLayer(polygonGroup)) {
-        map.removeLayer(polygonGroup);
-        polygonButtonSpan.textContent = "Off"
-    } else {
-        polygonGroup.addTo(map);
-        polygonButtonSpan.textContent = "On";
-    }
-
-})
 
 // load public transport lines
 
