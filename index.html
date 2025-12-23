@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My handcrafted map</title>
+    <link rel="icon" type="image/png" href="train.png">
+    <title>Berlin Transit Live Map</title>
     <link rel="stylesheet" href="map.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
@@ -35,26 +36,32 @@
             <legend>Vehicles</legend>
             <div>
                 <input type="checkbox" id="subway" name="subway" value="subway" checked />
+                <span class="legend-dot" style="background: #0066CC;"></span>
                 <label for="subway">U-Bahn</label>
             </div>
             <div>
                 <input type="checkbox" id="tram" name="tram" value="tram" checked />
+                <span class="legend-dot" style="background: #E63946;"></span>
                 <label for="tram">Tram</label>
             </div>
             <div>
                 <input type="checkbox" id="suburban" name="suburban" value="suburban" checked />
+                <span class="legend-dot" style="background: #2A9D8F;"></span>
                 <label for="suburban">S-Bahn</label>
             </div>
             <div>
                 <input type="checkbox" id="bus" name="bus" value="bus" />
+                <span class="legend-dot" style="background: #9B59B6;"></span>
                 <label for="bus">Bus</label>
             </div>
             <div>
                 <input type="checkbox" id="regional" name="regional" value="regional" />
+                <span class="legend-dot" style="background: #E76F51;"></span>
                 <label for="regional">Regional Train</label>
             </div>
             <div>
                 <input type="checkbox" id="express" name="express" value="express" />
+                <span class="legend-dot" style="background: #D62828;"></span>
                 <label for="express">Express Train</label>
             </div>
         </fieldset>
@@ -76,6 +83,24 @@
             <div>
                 <input type="checkbox" id="bus_line" name="bus_line" value="bus_line" />
                 <label for="bus_line">Bus</label>
+            </div>
+        </fieldset>
+
+        <fieldset id="legend-panel" class="filter legend-info">
+            <legend>Legend</legend>
+            <div class="legend-section">
+                <div class="legend-item">
+                    <span class="legend-icon">●</span>
+                    <span class="legend-text">Moving vehicles (colored by type)</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-icon" style="color: #999999;">●</span>
+                    <span class="legend-text">Stale/missed updates</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-icon">━</span>
+                    <span class="legend-text">Route lines</span>
+                </div>
             </div>
         </fieldset>
 

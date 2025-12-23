@@ -361,10 +361,10 @@ async function loadGeoJSON(url, color, type) {
 }
 
 (async () => {
-    await loadGeoJSON(`ubahn_line.geojson`, "blue", "subway_line");
-    await loadGeoJSON(`s-bahn_lines.geojson`, "green", "suburban_line");
-    await loadGeoJSON(`tram_line.geojson`, "red", "tram_line");
-    await loadGeoJSON(`bus_bvg_only.geojson`, "purple", "bus_line");
+    await loadGeoJSON(`lines/ubahn_line.geojson`, "blue", "subway_line");
+    await loadGeoJSON(`lines/s-bahn_lines.geojson`, "green", "suburban_line");
+    await loadGeoJSON(`lines/tram_line.geojson`, "red", "tram_line");
+    await loadGeoJSON(`lines/bus_bvg_only.geojson`, "purple", "bus_line");
 
     // Apply initial filter state after all layers are loaded
     filterLines();
