@@ -1,9 +1,9 @@
-// Helper for timestamps
+
 function timestamp() {
     return new Date().toISOString();
 }
 
-// Private cache state (not exported directly)
+// Private cache state 
 const cache = {
     movements: new Map(),
     lastUpdated: null,
@@ -12,28 +12,23 @@ const cache = {
     consecutiveEmptyUpdates: 0
 };
 
-/**
- * Replace all cached movements with fresh data
- * @param {Array} movements - Array of movement objects from VBB API
- */
+
+// Replace all cached movements with fresh data
+
 function update(movements) {
     const previousCount = cache.movements.size;
 
-    // FIX: Don't wipe cache when API returns empty data
-    // This prevents the "flying vehicles" issue when VBB API temporarily fails
+
     if (movements.length === 0) {
         cache.consecutiveEmptyUpdates++;
         cache.lastEmptyUpdate = timestamp();
-        console.warn(`[Cache] [${timestamp()}] ⚠️ EMPTY UPDATE RECEIVED - PRESERVING EXISTING CACHE!`);
-        console.warn(`[Cache]   └─ Preserved cache size: ${previousCount}`);
-        console.warn(`[Cache]   └─ Consecutive empty updates: ${cache.consecutiveEmptyUpdates}`);
-        // Don't update lastUpdated - keep the old timestamp to show cache staleness
-        return; // EXIT EARLY - don't wipe the cache!
+        console.warn(`[Cache] [${timestamp()}] EMPTY UPDATE RECEIVED`);
+        return;
     }
 
     // Reset counter when we get valid data
     if (cache.consecutiveEmptyUpdates > 0) {
-        console.log(`[Cache] [${timestamp()}] ✅ DATA RECOVERED after ${cache.consecutiveEmptyUpdates} empty updates`);
+        console.log(`[Cache] [${timestamp()}] DATA RECOVERED after ${cache.consecutiveEmptyUpdates} empty updates`);
     }
     cache.consecutiveEmptyUpdates = 0;
 
@@ -78,15 +73,13 @@ function update(movements) {
     cache.lastUpdated = new Date();
     cache.updateCount += 1;
 
-    console.log(`[Cache] [${timestamp()}] Update #${cache.updateCount}:`);
-    console.log(`[Cache]   └─ Total: ${cache.movements.size} (was ${previousCount})`);
-    console.log(`[Cache]   └─ Existing: ${existingCount}, New: ${newCount}`);
+    console.log(`[Cache] [${timestamp()}] Update #${cache.updateCount}`);
+
 }
 
-/**
- * Get all current movements as an array
- * @returns {Array} All movement objects
- */
+
+//Get all current movements as an array
+
 function getAll() {
     return Array.from(cache.movements.values()).map(vehicle => ({
         // Current position data
@@ -97,7 +90,7 @@ function getAll() {
         longitude: vehicle.current.longitude,
         type: vehicle.current.type,
 
-        // Previous position for animation (new field)
+        // Previous position for animation 
         previousPosition: vehicle.previous ? {
             latitude: vehicle.previous.latitude,
             longitude: vehicle.previous.longitude
@@ -105,17 +98,15 @@ function getAll() {
     }));
 }
 
-/**
- * Get cache statistics
- * @returns {Object} Stats including count, age, health status
- */
+// Get cache statistics
+
 function getStats() {
     const now = new Date();
     const ageMs = cache.lastUpdated ? now - cache.lastUpdated : null;
 
     // DIAGNOSTIC: Log when cache age is approaching stale threshold
     if (ageMs !== null && ageMs > 12000) {
-        console.warn(`[Cache] ⚠️ Cache aging: ${ageMs}ms (last updated: ${cache.lastUpdated?.toISOString()})`);
+        console.warn(`[Cache] Cache aging: ${ageMs}ms (last updated: ${cache.lastUpdated?.toISOString()})`);
     }
 
     return {

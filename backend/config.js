@@ -14,13 +14,13 @@ export default {
     VBB_BASE_URL: 'https://v6.vbb.transport.rest',
     POLL_INTERVAL_MS: 20000,
 
-    // Bounding boxes (the 19 grid squares from map.js)
+    // Bounding boxes
     BOUNDING_BOXES: [
         // Row 1: Polygons 1, 2, 3 (4 is removed)
         { id: '1', north: 52.6755, south: 52.5913, west: 13.0884, east: 13.2566 },
         { id: '2', north: 52.6755, south: 52.5913, west: 13.2566, east: 13.4248 },
         { id: '3', north: 52.6755, south: 52.5913, west: 13.4248, east: 13.5929 },
-        // Polygon 4 is REMOVED (line 117 in map.js)
+        // Polygon 4 is REMOVED
 
         // Row 2: Polygon 5, then 6 is SUBDIVIDED, 7, 8
         { id: '5', north: 52.5913, south: 52.5069, west: 13.0884, east: 13.2566 },

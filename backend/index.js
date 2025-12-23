@@ -32,7 +32,6 @@ app.use(cors(corsOptions));
 app.use(express.json());
 
 // Request logging middleware
-// Skip logging for frequently polled endpoints to reduce log spam
 const SILENT_PATHS = ['/api/rate-limit', '/health'];
 
 app.use((req, res, next) => {
@@ -114,7 +113,7 @@ app.get('/health', (req, res) => {
         }
     }
 
-    // Return 503 if cache is stale (allows railway to restart)
+    // Return 503 if cache is stale
 
     const statusCode = stats.isHealthy ? 200 : 503;
     res.status(statusCode).json(health);
@@ -124,7 +123,7 @@ app.get('/health', (req, res) => {
     }
 });
 
-// starting poller (why before server?)
+// starting poller
 poller.start();
 
 // Start express server

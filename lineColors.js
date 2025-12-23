@@ -35,12 +35,10 @@ await loadLineColors();
 
 // Helper function to get colors for a line
 export function getLineColors(lineName, vehicleType) {
-    // Try exact match first
     if (lineColors[lineName]) {
         return lineColors[lineName];
     }
 
-    // Fallback based on vehicle type
     if (vehicleType === 'tram' && lineColors['Tram']) {
         return lineColors['Tram'];
     }
@@ -49,7 +47,6 @@ export function getLineColors(lineName, vehicleType) {
         return lineColors['Bus'];
     }
 
-    // Final fallback to gray
     return {
         background: '#666666',
         text: '#ffffff'

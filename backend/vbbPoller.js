@@ -4,12 +4,11 @@ import * as rateLimitTracker from './rateLimitTracker.js';
 
 const POLL_INTERVAL_MS = 20000;
 
-// Helper for timestamps
 function timestamp() {
     return new Date().toISOString();
 }
 
-// Track polling stats for debugging
+// Track polling stats
 let pollStats = {
     totalPolls: 0,
     successfulPolls: 0,
@@ -22,16 +21,13 @@ let pollStats = {
 
 
 
-// Total: 19 boxes (16 - 1 removed + 4 added for polygon 6 + 4 added for polygon 10 - 2 original = 19)
 
 const VBB_BASE_URL = config.VBB_BASE_URL;
 const BOUNDING_BOXES = config.BOUNDING_BOXES;
 
-/**
- * Fetch movements for a single bounding box
- * @param {Object} box - Bounding box with north, south, east, west
- * @returns {Array} Array of movement objects
- */
+
+// Fetch movements for a single bounding box
+
 
 async function fetchBox(box) {
     const url = `${VBB_BASE_URL}/radar?north=${box.north}&west=${box.west}&south=${box.south}&east=${box.east}`;
@@ -49,8 +45,7 @@ async function fetchBox(box) {
 
         const data = await response.json();
 
-        // Transform the data to match your frontend's expected format
-        // (same transformation as in vbb_data.js lines 38-45)
+        // Transform the data
         return (data.movements || []).map(movement => ({
             name: movement.line.name,
             direction: movement.direction,
@@ -66,11 +61,7 @@ async function fetchBox(box) {
     }
 }
 
-/**
- * Fetch all bounding boxes and combine results
- * @returns {Array} Deduplicated array of all movements
- */
-
+//Fetch all bounding boxes and combine results
 async function fetchAllBoxes() {
     console.log(`[Poller] Fetching ${BOUNDING_BOXES.length} bounding boxes...`);
     // fetch all boxes in parallel
@@ -120,12 +111,11 @@ async function poll() {
         if (movements.length === 0) {
             pollStats.emptyPolls++;
             pollStats.consecutiveEmptyPolls++;
-            console.warn(`[Poller] [${timestamp()}] ⚠️ EMPTY POLL - VBB returned 0 movements!`);
-            console.warn(`[Poller]   └─ Consecutive empty polls: ${pollStats.consecutiveEmptyPolls}`);
-            console.warn(`[Poller]   └─ Last non-empty poll: ${pollStats.lastNonEmptyPollTime || 'never'}`);
+            console.warn(`[Poller] [${timestamp()}] EMPTY POLL - VBB returned 0 movements!`);
+
         } else {
             if (pollStats.consecutiveEmptyPolls > 0) {
-                console.log(`[Poller] [${timestamp()}] ✅ DATA RECOVERED after ${pollStats.consecutiveEmptyPolls} empty polls`);
+                console.log(`[Poller] [${timestamp()}] DATA RECOVERED after ${pollStats.consecutiveEmptyPolls} empty polls`);
             }
             pollStats.successfulPolls++;
             pollStats.consecutiveEmptyPolls = 0;
@@ -136,14 +126,10 @@ async function poll() {
 
         // DIAGNOSTIC: Track when next poll is expected
         const nextPollIn = POLL_INTERVAL_MS - duration;
-        console.log(`[Poller] [${timestamp()}] ━━━ Poll #${pollId} END ━━━`);
-        console.log(`[Poller]   └─ Duration: ${duration}ms`);
-        console.log(`[Poller]   └─ Movements: ${movements.length}`);
-        console.log(`[Poller]   └─ Next poll in: ~${nextPollIn}ms`);
-        console.log(`[Poller]   └─ Stats: ${pollStats.successfulPolls} ok, ${pollStats.emptyPolls} empty, ${pollStats.failedPolls} failed`);
+        console.log(`[Poller] [${timestamp()}] Poll #${pollId} END - Dur: ${duration}ms - Mov: ${movements.length}`);
     } catch (error) {
         pollStats.failedPolls++;
-        console.error(`[Poller] [${timestamp()}] ❌ Poll #${pollId} FAILED:`, error.message);
+        console.error(`[Poller] [${timestamp()}] Poll #${pollId} FAILED:`, error.message);
     } finally {
         isPolling = false;
     }

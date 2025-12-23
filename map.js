@@ -20,12 +20,12 @@ const markers = new Map();
 
 // Color scheme for different transport types
 const TYPE_COLORS = {
-    'subway': '#0066CC',      // blue
-    'tram': '#E63946',        // red
-    'suburban': '#2A9D8F',    // green
-    'bus': '#9B59B6',         // purple
-    'regional': '#E76F51',    // orange-red
-    'express': '#D62828'      // darker red
+    'subway': '#0066CC',
+    'tram': '#E63946',
+    'suburban': '#2A9D8F',
+    'bus': '#9B59B6',
+    'regional': '#E76F51',
+    'express': '#D62828'
 };
 
 function getMarkerStyle(type, isMissed = false) {
@@ -39,7 +39,6 @@ function getMarkerStyle(type, isMissed = false) {
     };
 }
 
-// Helper for timestamps
 function timestamp() {
     return new Date().toISOString();
 }
@@ -55,30 +54,27 @@ async function updateMarkers() {
     const cycleId = updateCycleCount;
     const tag = '[Map]';
 
-    console.log(`${tag} [${timestamp()}] ━━━ Update Cycle #${cycleId} START ━━━`);
-    console.log(`${tag}   └─ Current markers: ${markers.size}`);
+    console.log(`[Map] ${timestamp()} Cycle ${cycleId} start`);
+    console.log(`[Map] Markers: ${markers.size}`);
 
     const result = await getData();
     const { movements: allData, cacheAge, isStale } = result;
 
     if (!Array.isArray(allData) || allData.length === 0) {
         consecutiveEmptyUpdates++;
-        console.warn(`${tag} [${timestamp()}] ⚠️ EMPTY DATA - Skipping update`);
-        console.warn(`${tag}   └─ Consecutive empty updates: ${consecutiveEmptyUpdates}`);
-        console.warn(`${tag}   └─ Last non-empty update: ${lastNonEmptyUpdate || 'never'}`);
-        console.warn(`${tag}   └─ Markers still on map: ${markers.size}`);
+        console.warn(`${tag} [${timestamp()}] EMPTY DATA - Skipping update`);
         console.log(`${tag} [${timestamp()}] ━━━ Update Cycle #${cycleId} END (empty) ━━━`);
         return;
     }
 
-    // Got data! Reset counter and track time
+    // If data, reset counter and track time
     if (consecutiveEmptyUpdates > 0) {
-        console.log(`${tag} [${timestamp()}] ✅ DATA RECOVERED after ${consecutiveEmptyUpdates} empty updates`);
+        console.log(`${tag} [${timestamp()}] DATA RECOVERED after ${consecutiveEmptyUpdates} empty updates`);
     }
     consecutiveEmptyUpdates = 0;
     lastNonEmptyUpdate = timestamp();
 
-    // FIX: If cache is stale (>40s, missed 2+ backend polls), use teleport mode (no animation)
+    // If cache is stale (>40s, missed 2+ backend polls), use teleport mode (no animation)
     const useAnimation = !isStale;
     if (isStale) {
         console.warn(`${tag} [${timestamp()}] 📍 SEVERELY STALE CACHE (${cacheAge}ms > 40s) - Using TELEPORT mode`);
@@ -127,8 +123,7 @@ async function updateMarkers() {
 
             // Add click handler for route selection
             createdMarker.on('click', function (e) {
-                L.DomEvent.stopPropagation(e); // Prevent map click from firing
-                console.log(`[DEBUG] Marker clicked! Line name: "${movement.name}"`);
+                L.DomEvent.stopPropagation(e);
                 selectRouteByRef(movement.name);
             });
 
@@ -137,7 +132,7 @@ async function updateMarkers() {
                 misses: 0,
                 lastSeen: Date.now(),
                 type: movement.type,
-                lineName: movement.name // Store line name/ref for route selection
+                lineName: movement.name
             })
 
             // Start animation if we have previous position AND fresh data
@@ -187,10 +182,7 @@ initDebuggingUI(map, updateMarkers, markers);
 
 updateMarkers();
 
-// FIX: Sync with backend's 20s poll cycle
-// Backend polls every 20s, frontend should poll at same interval
-// BUT with a +2s offset to ensure backend has finished updating cache
-// This prevents requesting during backend's polling operation
+
 setInterval(updateMarkers, 20000)
 
 function animateMarker(marker, newLat, newLng) {
@@ -294,11 +286,11 @@ function selectRouteByRef(ref) {
     selectedRoute = ref;
     console.log(`[Route Selection] Selected route: ${ref}`);
 
-    // Dim all routes first
+    // Dim all routes
     routeFeatures.forEach((features, routeRef) => {
         features.forEach(featureData => {
             if (routeRef === ref) {
-                // Highlight selected route - make it brighter and thicker
+                // Highlight selected route
                 featureData.layer.setStyle({
                     color: featureData.defaultColor,
                     opacity: 1,
@@ -316,10 +308,9 @@ function selectRouteByRef(ref) {
     });
 }
 
-// Function to reset route selection (show all routes normally)
+// Function to reset route selection 
 function resetRouteSelection() {
     selectedRoute = null;
-    console.log('[Route Selection] Reset - showing all routes normally');
 
     // Restore all routes to their default colors
     routeFeatures.forEach((features) => {
@@ -349,9 +340,6 @@ map.on('click', function (e) {
 
     // Apply initial filter state after all layers are loaded
     filterLines();
-
-    console.log(`[DEBUG] GeoJSON loading complete. Total routes stored: ${routeFeatures.size}`);
-    console.log(`[DEBUG] Route refs available:`, Array.from(routeFeatures.keys()));
 })();
 
 
@@ -360,13 +348,13 @@ const lineFilter = document.getElementById("line-filter");
 const lineCheckboxes = lineFilter.querySelectorAll('input[type="checkbox"');
 
 function filterLines() {
-    const checked = new Set(Array.from(lineCheckboxes) // what is set?
+    const checked = Array.from(lineCheckboxes)
         .filter(checkbox => checkbox.checked)
         .map(checkbox => checkbox.value)
-    );
+        ;
 
     geoJSONLayers.forEach((layer, type) => {
-        if (checked.has(type)) {
+        if (checked.includes(type)) {
             if (!map.hasLayer(layer)) {
                 layer.addTo(map);
             }

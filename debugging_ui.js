@@ -11,21 +11,12 @@ const GRID_SIZE = 4;
 let polygonGroup = null;
 let markerCountDiv = null;
 
-/**
- * Initialize debugging UI components
- * @param {L.Map} map - Leaflet map instance
- * @param {Function} updateMarkersCallback - Callback function to refresh markers
- * @param {Map} markersMap - Map containing current markers for count display
- */
 export function initDebuggingUI(map, updateMarkersCallback, markersMap) {
-    // Create polygon pane
     map.createPane("polygonsPane");
     map.getPane("polygonsPane").style.zIndex = 400;
 
-    // Initialize polygon group
     polygonGroup = L.featureGroup().addTo(map);
 
-    // Create main boundary polygon
     L.polygon([
         [north, west],
         [north, east],
@@ -33,11 +24,9 @@ export function initDebuggingUI(map, updateMarkersCallback, markersMap) {
         [south, west]
     ], { pane: "polygonsPane" }).addTo(polygonGroup);
 
-    // Calculate grid cell sizes
     const latStep = (north - south) / GRID_SIZE;
     const lngStep = (east - west) / GRID_SIZE;
 
-    // Generate grid coordinates
     const coordinates = [];
 
     for (let row = 0; row < GRID_SIZE; row++) {
@@ -59,22 +48,17 @@ export function initDebuggingUI(map, updateMarkersCallback, markersMap) {
     busyPolyDivider(5, coordinates);
     busyPolyDivider(9, coordinates);
 
-    // Hide polygons by default
+
     map.removeLayer(polygonGroup);
 
-    // Setup polygon toggle button
     setupPolygonButton(map);
 
-    // Setup refresh button
     setupRefreshButton(updateMarkersCallback);
 
-    // Setup marker count display
     setupMarkerCount(markersMap, updateMarkersCallback);
 }
 
-/**
- * Draw a labeled polygon on the map
- */
+// original polygons
 function drawLabeledPolygon(bounds, label) {
     return L.polygon([
         [bounds.north, bounds.west],
@@ -91,9 +75,7 @@ function drawLabeledPolygon(bounds, label) {
         .openTooltip();
 }
 
-/**
- * Divide a polygon into 4 sub-polygons for higher resolution tracking
- */
+// sub-polgyons
 function busyPolyDivider(index, coordinates) {
     const coorObj = coordinates[index];
 
@@ -115,9 +97,7 @@ function busyPolyDivider(index, coordinates) {
     }
 }
 
-/**
- * Setup polygon visibility toggle button
- */
+
 function setupPolygonButton(map) {
     const polygonButton = document.getElementById("polygon-button");
     const polygonButtonSpan = document.getElementById("polygon-button-span");
@@ -138,9 +118,6 @@ function setupPolygonButton(map) {
     });
 }
 
-/**
- * Setup manual refresh button
- */
 function setupRefreshButton(updateMarkersCallback) {
     const refreshButton = document.getElementById("refresh-button");
 
@@ -152,9 +129,6 @@ function setupRefreshButton(updateMarkersCallback) {
     refreshButton.addEventListener("click", updateMarkersCallback);
 }
 
-/**
- * Setup marker count display
- */
 function setupMarkerCount(markersMap, updateMarkersCallback) {
     markerCountDiv = document.getElementById("marker-count");
 
@@ -163,7 +137,6 @@ function setupMarkerCount(markersMap, updateMarkersCallback) {
         return;
     }
 
-    // Return update function so map.js can call it after updates
     return function updateMarkerCount() {
         if (markerCountDiv) {
             markerCountDiv.innerHTML = `<p>Marker count is ${markersMap.size}</p>`;
@@ -171,10 +144,7 @@ function setupMarkerCount(markersMap, updateMarkersCallback) {
     };
 }
 
-/**
- * Update the marker count display
- * @param {number} count - Number of markers currently on the map
- */
+
 export function updateMarkerCount(count) {
     if (markerCountDiv) {
         markerCountDiv.innerHTML = `<p>Marker count is ${count}</p>`;
