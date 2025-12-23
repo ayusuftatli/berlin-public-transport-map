@@ -1,7 +1,7 @@
 
 
 
-import { API_BASE, CURRENT_ENV } from './frontend-config.js';
+import { API_BASE } from './frontend-config.js';
 
 // Helper to get timestamp for logs
 function timestamp() {
