@@ -31,12 +31,12 @@ export async function getData() {
         }
 
         const result = await response.json();
-        const movementCount = result.movements?.length || 0; // FIXED: was "legnth" typo
+        const movementCount = result.movements?.length || 0;
         const cacheAge = result.meta?.ageMs || 0;
         const isHealthy = result.meta?.isHealthy;
 
         // Detailed logging
-        console.log(`${tag} [${timestamp()}] ✅ Response received:`);
+        console.log(`${tag} [${timestamp()}] Response received:`);
         console.log(`${tag}   └─ Movements: ${movementCount}`);
         console.log(`${tag}   └─ Cache age: ${cacheAge}ms`);
         console.log(`${tag}   └─ Cache healthy: ${isHealthy}`);
@@ -52,7 +52,7 @@ export async function getData() {
         });
         if (fetchHistory.length > MAX_HISTORY) fetchHistory.shift();
 
-        // CRITICAL: Alert when we get 0 movements
+        // Alert when we get 0 movements
         if (movementCount === 0) {
             console.warn(`${tag} [${timestamp()}] ⚠️ ZERO MOVEMENTS RECEIVED!`);
             console.warn(`${tag}   └─ Cache age: ${cacheAge}ms (stale if > 60000)`);
@@ -61,8 +61,7 @@ export async function getData() {
         }
 
         // DIAGNOSTIC: Track timing pattern
-        // FIX: Increased threshold to 40s to accommodate 20s backend polling cycle
-        // Only teleport if backend has missed 2+ polling cycles (truly stale)
+        // Only teleport if backend has missed 2+ polling cycles
         const isStale = cacheAge > 40000;
         if (isStale) {
             console.warn(`${tag} ⚠️ STALE DETECTED: Cache age ${cacheAge}ms exceeds 40s threshold (backend likely down)`);
@@ -75,7 +74,7 @@ export async function getData() {
             isStale: isStale  // Pre-calculate if cache is stale (>15 seconds)
         };
     } catch (error) {
-        console.error(`${tag} [${timestamp()}] ❌ Fetch Error: ${error.message}`);
+        console.error(`${tag} [${timestamp()}] Fetch Error: ${error.message}`);
         fetchHistory.push({
             time: timestamp(),
             count: -1,

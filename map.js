@@ -8,7 +8,7 @@ map.getPane("markersPane").style.zIndex = 650;
 
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     maxZoom: 19,
-    attribution: '© OpenStreetMap contributors © CARTO'
+    attribution: 'OpenStreetMap contributors | CARTO | derhuerst | VBB'
 }).addTo(map);
 
 //Layer group to hold all markers

@@ -182,10 +182,34 @@ button {
     line-height: 1.6;
 }
 
+.portfolio-link {
+    position: fixed;
+    bottom: 16px;
+    left: auto;
+    z-index: 1000;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+    text-decoration: none;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: bluer(8px);
+    transition: all 0.2s ease;
+}
+
+.portfolio-link:hover {
+    color: rgba(255, 255, 255, 0.9);
+    background: rgba(0, 0, 0, 0.5);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
 /* Filter handle (hidden on desktop) */
 .filter-handle {
     display: none;
 }
+
+
 
 /* Mobile-specific styles */
 @media (max-width: 768px) {
@@ -275,6 +299,14 @@ button {
 
     .filter>div {
         padding: 6px 0;
+    }
+
+    .portfolio-link {
+        bottom: auto;
+        top: 16px;
+        right: 16px;
+        font-size: 11px;
+        padding: 5px 8px;
     }
 
     /* Two-column layout for checkboxes on wider mobile screens */
