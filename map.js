@@ -174,6 +174,31 @@ async function updateMarkers() {
 
     filterMarkers()
     updateMarkerCount(markers.size);
+    updateStatsPanel();
+}
+
+// Update stats panel
+function updateStatsPanel() {
+    const vehicleCountEl = document.getElementById('vehicle-count');
+    const lastUpdateEl = document.getElementById('last-update');
+
+    if (vehicleCountEl) {
+        vehicleCountEl.textContent = markers.size;
+        // Add pulse animation on update
+        vehicleCountEl.classList.add('updated');
+        setTimeout(() => vehicleCountEl.classList.remove('updated'), 500);
+    }
+
+    if (lastUpdateEl) {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        });
+        lastUpdateEl.textContent = timeString;
+    }
 }
 
 

@@ -93,6 +93,23 @@
                 <input type="checkbox" id="bus_line" name="bus_line" value="bus_line" />
                 <label for="bus_line">Bus</label>
             </div>
+        </fieldset>
+
+        <div id="stats-panel" class="stats-panel">
+            <div class="stat-item">
+                <span class="stat-label">Live Vehicles</span>
+                <span class="stat-value" id="vehicle-count">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Last Update</span>
+                <span class="stat-value" id="last-update">--:--</span>
+            </div>
+        </div>
+
+        <div class="quick-actions">
+            <button id="toggle-all-vehicles" class="action-btn">Toggle All Vehicles</button>
+            <button id="toggle-all-routes" class="action-btn">Toggle All Routes</button>
+        </div>
 
     </div>
     <a href="https://ayusuftatli.com" target="_blank" rel="noopener noreferrer" class="portfolio-link">Built by Yusuf
@@ -120,6 +137,36 @@
                 // Prevent closing when clicking inside controls
                 controls.addEventListener('click', (e) => {
                     e.stopPropagation();
+                });
+            }
+
+            // Toggle all vehicles
+            const toggleAllVehicles = document.getElementById('toggle-all-vehicles');
+            if (toggleAllVehicles) {
+                toggleAllVehicles.addEventListener('click', () => {
+                    const movementFilter = document.getElementById('movement-filter');
+                    const checkboxes = movementFilter.querySelectorAll('input[type="checkbox"]');
+                    const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+
+                    checkboxes.forEach(cb => {
+                        cb.checked = !allChecked;
+                        cb.dispatchEvent(new Event('change'));
+                    });
+                });
+            }
+
+            // Toggle all routes
+            const toggleAllRoutes = document.getElementById('toggle-all-routes');
+            if (toggleAllRoutes) {
+                toggleAllRoutes.addEventListener('click', () => {
+                    const lineFilter = document.getElementById('line-filter');
+                    const checkboxes = lineFilter.querySelectorAll('input[type="checkbox"]');
+                    const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+
+                    checkboxes.forEach(cb => {
+                        cb.checked = !allChecked;
+                        cb.dispatchEvent(new Event('change'));
+                    });
                 });
             }
         });
